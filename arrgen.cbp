@@ -31,7 +31,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="arrgenmain.c">
+		<Unit filename="Makefile" />
+		<Unit filename="arrgen.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions />
