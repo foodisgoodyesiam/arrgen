@@ -18,11 +18,17 @@
 CFLAGS ?= -O2 -Werror=format
 CFLAGS := $(CFLAGS) -MMD
 LDFLAGS ?= $(CFLAGS)
+prefix ?= /usr/local/bin
 
-.PHONY: clean
+.PHONY: clean install
 
 all: arrgen
 clean:
 	rm -rf arrgen *.o *.d
 
 arrgen: arrgen.o
+
+install: $(prefix)/arrgen
+
+$(prefix)/arrgen: arrgen
+	install -m 755 $< $@

@@ -1,4 +1,4 @@
-/* Copyright © 2019 2024 Steven Marion <steven@dragons.fish>
+/* Copyright © 2024 Steven Marion <steven@dragons.fish>
  *
  * This file is part of arrgen.
  *
@@ -23,7 +23,6 @@
  *   -write help text
  *   -make it possible to specify macro for array length, and name of array
  *   -make it correctly generate relative path from .c file to .h file for header inclusion?
- *   -make 
  */
 #define _GNU_SOURCE
 
@@ -32,31 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
-#if defined(__has_include) && __has_include(<sys/mman.h>)
-#   include <sys/mman.h>
-#   define MMAP_SUPPORTED
-#endif
-
-#if defined(__CYGWIN__) || defined(_WIN64) || defined(_WIN32)
-#   define PATH_MAX 1000 //should be 260 but whatever
-#elif defined(__APPLE__)
-#   include <sys/syslimits.h>
-#elif defined(__has_include) && __has_include(<linux/limits.h>)
-#   include <linux/limits.h>
-#else
-#   warning "could not detect PATH_MAX, defaulting to 4096"
-#   define PATH_MAX 4096
-#endif
-
-#if defined(__has_builtin)
-#   if __has_builtin(__builtin_expect)
-#       define LIKELY(a) __builtin_expect((a), true)
-#       define UNLIKELY(a) __builtin_expect((a), false)
-#   else
-#       define LIKELY(a) (a)
-#       define UNLIKELY(a) (a)
-#   endif
-#endif
+#include "arrgen.h"
 
 #if !defined(__GLIBC__) && !defined(__CYGWIN__)
 static const char* basename(const char* path) {
@@ -72,6 +47,9 @@ static const char* program_name_;
 
 #define VERSION "0.0.0.next"
 
+static const char HELPTEXT[] =
+    "TODO\n";
+
 //static unsigned line_length_ = 400;
 static char c_path_[PATH_MAX];
 static char h_path_[PATH_MAX];
@@ -85,9 +63,9 @@ typedef struct {
     size_t line_length; // TODO use
 } ArrgenParams;
 
-static bool handleFile(const ArrgenParams* params);
-static bool writeH(const ArrgenParams* params, size_t length);
-static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length);
+static bool handleFile(const ArrgenParams* params) ATTR_NONNULL;
+static bool writeH(const ArrgenParams* params, size_t length) ATTR_NONNULL;
+static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length) ATTR_NONNULL;
 
 int main(int arg_num, const char** args) {
     program_name_ = args[0];
@@ -167,9 +145,19 @@ static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length) {
         fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->c_path, strerror(errno));
         ret = false;
     } else {
-        size_t array_size = 10; // temporary value
-        fprintf(out, "#include \"%s\"\n\n", basename(params->h_path));
-        // TODO write the content
+        fprintf(out,
+            "#include \"%s\"\n"
+            "const unsigned char %s[%s] = {",
+            basename(params->h_path),
+            params->array_name,
+            params->length_name);
+        // TODO optimize this, this will be horribly slow
+        for (size_t i=0; i<length-1; i++)
+            fprintf(out, "%u,", (unsigned)buf[i]);
+        if (length>0)
+            fprintf(out, "%u", (unsigned)buf[length-1]);
+        fprintf(out, "};");
+
         if (UNLIKELY(fclose(out)!=0))
             fprintf(stderr, "%s: %s: could not close: %s\n", program_name_, params->c_path, strerror(errno));
     }
