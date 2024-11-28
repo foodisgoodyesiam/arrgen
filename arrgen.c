@@ -23,8 +23,19 @@
  *   -write help text
  *   -make it possible to specify macro for array length, and name of array
  *   -make it correctly generate relative path from .c file to .h file for header inclusion?
+ *   -make it willing to read from standard input
+ *   -make a myError function to reduce code size from all these error messages (or add libsvenmar as a dependency)
  */
 #define _GNU_SOURCE
+
+
+#if defined(__has_include) && __has_include(<sys/mman.h>)
+#   include <sys/mman.h>
+#   include <sys/stat.h>
+#   include <unistd.h>
+#   include <fcntl.h>
+#   define MMAP_SUPPORTED
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -65,7 +76,7 @@ typedef struct {
 
 static bool handleFile(const ArrgenParams* params) ATTR_NONNULL;
 static bool writeH(const ArrgenParams* params, size_t length) ATTR_NONNULL;
-static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length) ATTR_NONNULL;
+static bool writeC(const ArrgenParams* params, const uint8_t* buf, size_t length) ATTR_NONNULL;
 
 int main(int arg_num, const char** args) {
     program_name_ = args[0];
@@ -98,14 +109,51 @@ int main(int arg_num, const char** args) {
 }
 
 static bool handleFile(const ArrgenParams* params) {
-    bool ret = true;
+    bool ret;
     size_t length = 10U;
 #ifdef MMAP_SUPPORTED
-        // TODO
+    int fd = open(params->in_path, O_RDONLY);
+    if (UNLIKELY(fd<0)) {
+        fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->in_path, strerror(errno));
+        ret = false;
+    } else {
+        struct stat stats;
+        if (LIKELY(fstat(fd, &stats)==0)) {
+            fprintf(stderr, "%s: %s: could not fstat: %s\n", program_name_, params->in_path, strerror(errno));
+            ret = false;
+        } else {
+            switch (stats.st_mode & S_IFMT) {
+            case S_IFREG: {
+                const uint8_t* mem = (const uint8_t*) mmap(NULL, stats.st_size, PROT_READ, MAP_SHARED, fd, 0);
+                if (UNLIKELY(mem==MAP_FAILED)) {
+                    fprintf(stderr, "%s: %s: mmap: %s\n", program_name_, params->in_path, strerror(errno));
+                    ret = false;
+                } else {
+                    ret = writeC(params, mem, stats.st_size);
+                    if (UNLIKELY(munmap((void*)mem, stats.st_size))!=0)
+                        fprintf(stderr, "%s: %s: munmap: %s\n", program_name_, params->in_path, strerror(errno));
+                }
+                // TODO mmap
+
+                }; break;
+            case S_IFBLK:
+                fprintf(stderr, "%s: %s: what the heck are you doing?\n", program_name_, params->in_path);
+                ret = false;
+                break;
+            default:
+                // TODO: handle as pipe but that probably needs a restructuring... I guess not a big one
+                fprintf(stderr, "%s: %s: currently only regular files are supported, sorry\n", program_name_, params->in_path);
+                ret = false;
+                break;
+            }
+        }
+        if (UNLIKELY(close(fd)!=0))
+            fprintf(stderr, "%s: %s: could not close: %s\n", program_name_, params->in_path, strerror(errno));
+    }
 #else // MMAP_SUPPORTED
-        // TODO
+    writeC(params, "TODO stuff", strlen("TODO stuff"));
+    // TODO implement using C stdio
 #endif // MMAP_SUPPORTED
-    writeC(params, "TODO\0 stuff", strlen("TODO\0 stuff"));
     return (ret && (params->h_path == NULL || writeH(params, length)));
 }
 
@@ -118,6 +166,7 @@ static bool writeH(const ArrgenParams* params, size_t length) {
     } else {
         fprintf(out,
             "#define %s %zuU\n"
+            "\n"
             "#ifdef __cplusplus\n"
             "extern \"C\" {\n"
             "#endif // __cplusplus\n"
@@ -138,13 +187,14 @@ static bool writeH(const ArrgenParams* params, size_t length) {
     return (ret);
 }
 
-static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length) {
+static bool writeC(const ArrgenParams* params, const uint8_t* buf, size_t length) {
     FILE *out = fopen(params->c_path, "wb"); // CLRF is icky
     bool ret = true;
     if (UNLIKELY(out==NULL)) {
         fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->c_path, strerror(errno));
         ret = false;
     } else {
+        // TODO: actually, maybe have the writeC return the number of bytes written... that way it can handle pipes gracefully? do I care about that?
         fprintf(out,
             "#include \"%s\"\n"
             "const unsigned char %s[%s] = {",
@@ -156,6 +206,7 @@ static bool writeC(const ArrgenParams* params, uint8_t* buf, size_t length) {
             fprintf(out, "%u,", (unsigned)buf[i]);
         if (length>0)
             fprintf(out, "%u", (unsigned)buf[length-1]);
+        // TODO: consider whether to optimize by removing trailing zeros in the generated array
         fprintf(out, "};");
 
         if (UNLIKELY(fclose(out)!=0))

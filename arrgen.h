@@ -16,11 +16,6 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if defined(__has_include) && __has_include(<sys/mman.h>)
-#   include <sys/mman.h>
-#   define MMAP_SUPPORTED
-#endif
-
 #if defined(__CYGWIN__) || defined(_WIN64) || defined(_WIN32)
 #   define PATH_MAX 1000 //should be 260 but whatever
 #elif defined(__APPLE__)
