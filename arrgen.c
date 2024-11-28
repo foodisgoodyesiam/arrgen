@@ -27,6 +27,7 @@
  *   -make a myError function to reduce code size from all these error messages (or add libsvenmar as a dependency)
  *   -make it have an option to print the license, that's required by GPL right?
  *   -optimize for: speed of this program, generated file size, speed of compiling the generated file
+ *   -add options for generated text mode, something like: compact, aligned hex, octal, aligned decimal, etc...
  */
 #define _GNU_SOURCE
 
