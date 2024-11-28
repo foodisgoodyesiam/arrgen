@@ -23,6 +23,6 @@ LDFLAGS ?= $(CFLAGS)
 
 all: arrgen
 clean:
-	rm -rf arrgen *.o
+	rm -rf arrgen *.o *.d
 
 arrgen: arrgen.o
