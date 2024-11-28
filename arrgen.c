@@ -25,6 +25,8 @@
  *   -make it correctly generate relative path from .c file to .h file for header inclusion?
  *   -make it willing to read from standard input
  *   -make a myError function to reduce code size from all these error messages (or add libsvenmar as a dependency)
+ *   -make it have an option to print the license, that's required by GPL right?
+ *   -optimize for: speed of this program, generated file size, speed of compiling the generated file
  */
 #define _GNU_SOURCE
 
@@ -59,6 +61,7 @@ static const char* program_name_;
 #define VERSION "0.0.0.next"
 
 static const char HELPTEXT[] =
+
     "TODO\n";
 
 //static unsigned line_length_ = 400;
@@ -72,6 +75,7 @@ typedef struct {
     const char* length_name;
     const char* array_name;
     size_t line_length; // TODO use
+    bool create_header; // TODO use
 } ArrgenParams;
 
 static bool handleFile(const ArrgenParams* params) ATTR_NONNULL;
@@ -110,7 +114,7 @@ int main(int arg_num, const char** args) {
 
 static bool handleFile(const ArrgenParams* params) {
     bool ret;
-    size_t length = 10U;
+    size_t length;
 #ifdef MMAP_SUPPORTED
     int fd = open(params->in_path, O_RDONLY);
     if (UNLIKELY(fd<0)) {
@@ -118,7 +122,7 @@ static bool handleFile(const ArrgenParams* params) {
         ret = false;
     } else {
         struct stat stats;
-        if (LIKELY(fstat(fd, &stats)==0)) {
+        if (UNLIKELY(fstat(fd, &stats)!=0)) {
             fprintf(stderr, "%s: %s: could not fstat: %s\n", program_name_, params->in_path, strerror(errno));
             ret = false;
         } else {
@@ -130,11 +134,10 @@ static bool handleFile(const ArrgenParams* params) {
                     ret = false;
                 } else {
                     ret = writeC(params, mem, stats.st_size);
+                    length = stats.st_size;
                     if (UNLIKELY(munmap((void*)mem, stats.st_size))!=0)
                         fprintf(stderr, "%s: %s: munmap: %s\n", program_name_, params->in_path, strerror(errno));
                 }
-                // TODO mmap
-
                 }; break;
             case S_IFBLK:
                 fprintf(stderr, "%s: %s: what the heck are you doing?\n", program_name_, params->in_path);
