@@ -15,8 +15,9 @@
 # you should have received a copy of the gnu general public license
 # along with this file.  if not, see <https://www.gnu.org/licenses/>.
 
-CFLAGS ?= -O2 -flto=auto
+CFLAGS ?= -O2 -Werror=format
 CFLAGS := $(CFLAGS) -MMD
+LDFLAGS ?= $(CFLAGS)
 
 .PHONY: clean
 
