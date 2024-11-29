@@ -16,11 +16,15 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef ARRGEN_H_INCLUDED
+#define ARRGEN_H_INCLUDED
+
 #if defined(__CYGWIN__) || defined(_WIN64) || defined(_WIN32)
 #   define PATH_MAX 1000 //should be 260 but whatever
 #elif defined(__APPLE__)
 #   include <sys/syslimits.h>
-#elif defined(__has_include) && __has_include(<linux/limits.h>)
+// TODO: figure out why defined(__has_include) didn't work here on ToughGuy, but did on Midna
+#elif defined __linux__
 #   include <linux/limits.h>
 #else
 #   warning "could not detect PATH_MAX, defaulting to 4096"
@@ -35,15 +39,13 @@
 #   endif
 #endif
 
-#if defined(__has_builtin)
-#   if __has_builtin(__builtin_expect)
-#       define LIKELY(a) __builtin_expect((a), true)
-#       define UNLIKELY(a) __builtin_expect((a), false)
-#   else
-#       define LIKELY(a) (a)
-#       define UNLIKELY(a) (a)
-#   endif
+#if defined(__GNUC__) || defined(__clang__)
+#   define LIKELY(a) __builtin_expect((a), true)
+#   define UNLIKELY(a) __builtin_expect((a), false)
+#else
+#   define LIKELY(a) (a)
+#   define UNLIKELY(a) (a)
 #endif
 
-
+#endif // ARRGEN_H_INCLUDED
 

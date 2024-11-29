@@ -32,7 +32,7 @@
 #define _GNU_SOURCE
 
 
-#if defined(__has_include) && __has_include(<sys/mman.h>)
+#if (defined(__has_include) && __has_include(<sys/mman.h>)) || defined(__linux__) || defined(__APPLE__)
 #   include <sys/mman.h>
 #   include <sys/stat.h>
 #   include <unistd.h>
