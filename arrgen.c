@@ -14,23 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
- * TODO:
- *   -make line_length_ configurable
- *   -make option to generate the header or not
- *   -make it possible to configure other stuff
- *   -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
- *   -make it parse arguments, including at least --help and --version
- *   -write help text
- *   -make it possible to specify macro for array length, and name of array
- *   -make it correctly generate relative path from .c file to .h file for header inclusion?
- *   -make it willing to read from standard input
- *   -make a myError function to reduce code size from all these error messages (or add libsvenmar as a dependency)
- *   -make it have an option to print the license, that's required by GPL right?
- *   -optimize for: speed of this program, generated file size, speed of compiling the generated file
- *   -add options for generated text mode, something like: compact, aligned hex, octal, aligned decimal, etc...
  */
-#define _GNU_SOURCE
-
 
 #if (defined(__has_include) && __has_include(<sys/mman.h>)) || defined(__linux__) || defined(__APPLE__)
 #   include <sys/mman.h>
@@ -57,13 +41,16 @@ static const char* basename(const char* path) {
 }
 #endif
 
-static const char* program_name_;
-
 #define VERSION "0.0.0.next"
 
 static const char HELPTEXT[] =
-
-    "TODO\n";
+    "arrgen version " VERSION ". Copyright 2024 Steven Marion\n"
+    "Generates C arrays representing the contents of files, to embed files directly in compiled programs\n"
+    "Usage:\n"
+    "arrgen [OPTIONS]... FILE1 FILE2      Create a gen_arrays.c file with default parameters\n"
+    "arrgen [OPTIONS]... -f FILE          Create a .c file with parameters and inputs loaded from FILE\n"
+    "TODO\n"
+    ;
 
 //static unsigned line_length_ = 400;
 static char c_path_[PATH_MAX];
@@ -71,17 +58,25 @@ static char h_path_[PATH_MAX];
 
 typedef struct {
     const char* in_path;
-    const char* c_path;
-    const char* h_path; 
     const char* length_name;
     const char* array_name;
-    size_t line_length; // TODO use
+    off_t file_length;
     bool create_header; // TODO use
-} ArrgenParams;
+} InputFileParams;
+
+typedef struct {
+    const char* c_path;
+    const char* h_path;
+    size_t line_length; // TODO use
+    // TODO add more style stuff. base, etc
+    size_t num_inputs;
+    InputFileParams inputs[];
+} OutputFileParams;
 
 static bool handleFile(const ArrgenParams* params) ATTR_NONNULL;
 static bool writeH(const ArrgenParams* params, size_t length) ATTR_NONNULL;
 static bool writeC(const ArrgenParams* params, const uint8_t* buf, size_t length) ATTR_NONNULL;
+static bool writeArrayContentsStreamed(const uint8_t* buf, size_t length) ATTR_NONNULL;
 
 int main(int arg_num, const char** args) {
     program_name_ = args[0];
@@ -105,7 +100,7 @@ int main(int arg_num, const char** args) {
         return 1;
     }
     params.h_path = h_path_;
-    
+
     params.length_name = "LENGTH_NAME_TODO";
 
     params.array_name = "ARRAY_NAME_TODO";

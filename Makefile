@@ -26,7 +26,9 @@ all: arrgen
 clean:
 	rm -rf arrgen *.o *.d
 
-arrgen: arrgen.o
+arrgen: arrgen.o \
+	errors.o \
+	writearray.o
 
 install: $(prefix)/arrgen
 
