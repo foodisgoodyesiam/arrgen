@@ -15,10 +15,22 @@
 # you should have received a copy of the gnu general public license
 # along with this file.  if not, see <https://www.gnu.org/licenses/>.
 
-CFLAGS ?= -O2 -Werror=format
-CFLAGS := $(CFLAGS) -MMD
-LDFLAGS ?= $(CFLAGS)
+# 0 for production, 1 for debug (with sanitize and debug symbols), 2 for verbose debug (extra logging statements)
+DEBUG ?= 0
+
 prefix ?= /usr/local/bin
+ifeq ($(DEBUG),0)
+	CFLAGS ?= -O2 -Werror=format -Werror=implicit-function-declaration
+	CPPFLAGS ?= -DNDEBUG
+else
+	CFLAGS ?= -Og -fsanitize=address,undefined,leak -g
+	ifeq ($(DEBUG),2)
+		CPPFLAGS ::= $(CPPFLAGS) -DVERBOSE_DEBUG
+	endif
+endif
+LDFLAGS ?= $(CFLAGS)
+
+CFLAGS := $(CFLAGS) -MMD
 
 .PHONY: clean install
 
@@ -28,9 +40,12 @@ clean:
 
 arrgen: arrgen.o \
 	errors.o \
+	handlefile.o \
 	writearray.o
 
 install: $(prefix)/arrgen
 
 $(prefix)/arrgen: arrgen
 	install -m 755 $< $@
+
+-include $(wildcard *.d)

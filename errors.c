@@ -26,7 +26,7 @@
 #include <stdlib.h>
 //#include <unistd.h>
 
-// I don't care about optimizing these functions for speed, so repeated calls to vnsprintf are fine.
+// I don't care about optimizing these functions for speed, so repeated calls to vsnprintf are fine.
 
 void myError(const char* restrict message, ...) {
     va_list args, args_copy;
@@ -76,11 +76,11 @@ void myFatalErrno(const char* restrict message, ...) {
     int error = errno;
     va_list args, args_copy;
     va_start(args, message);
-    int len = vnsprintf(NULL, 0, message, args);
+    int len = vsnprintf(NULL, 0, message, args);
     va_end(args);
     if (LIKELY(len>=0)) {
         char buf[len+1];
-        vnsprintf(buf, len+1, message, args_copy);
+        vsnprintf(buf, len+1, message, args_copy);
         fprintf(stderr, "%s: %s: %s\n", program_name_, buf, strerror(error));
     }
     va_end(args_copy);

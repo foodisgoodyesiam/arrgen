@@ -62,6 +62,11 @@
 #else
 #   define ATTR_COLD
 #endif
+#if __has_attribute(hot)
+#   define ATTR_HOT __attribute__ ((hot))
+#else
+#   define ATTR_HOT
+#endif
 #if __has_attribute(format)
 #   define ATTR_FORMAT(...) __attribute__ ((format(__VA_ARGS__)))
 #else
@@ -84,9 +89,27 @@
 #   define UNLIKELY(a) (a)
 #endif
 
-void initializeLookup(uint8_t base, bool aligned);
+#ifdef VERBOSE_DEBUG
+#   include <stdio.h>
+#   define E_RED_BG            "\e[1;41m" //red background
+#   define E_GREEN_BG          "\e[1;42m" //green background. is hard to read...
+#   define E_ORANGE_BG         "\e[1;43m" //orange background
+#   define E_BLUE_BG           "\e[1;44m" //blue background
+#   define E_PURPLE_BG         "\e[1;45m" //purple background
+#   define E_RED_FG            "\e[1;31m" //red text
+#   define E_GREEN_FG          "\e[1;32m" //green text
+#   define E_ORANGE_FG         "\e[1;33m" //orange text
+#   define E_BLUE_FG           "\e[1;34m" //blue text
+#   define E_PURPLE_FG         "\e[1;35m" //purple text
+#   define E_RESET             "\e[0m" //reset terminal formatting to default
+#   define DLOG(msg, ...) fprintf(stderr, E_RED_FG "DEBUG:" E_RESET " %s: " msg "\n", __PRETTY_FUNCTION__, ##__VA_ARGS__)
+#else
+#   define DLOG(msg, ...)
+#endif
 
-void writeArrayContentsDec(const uint8_t *buf, size_t length) ATTR_ACCESS(read_only (1, 2));
+#ifndef ARRGEN_BUFFER_SIZE
+#   define ARRGEN_BUFFER_SIZE 65536U
+#endif
 
 #endif // ARRGEN_H_INCLUDED
 

@@ -29,17 +29,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <malloc.h>
 #include "arrgen.h"
-
-#if !defined(__GLIBC__) && !defined(__CYGWIN__)
-static const char* basename(const char* path) {
-    const char* ret = strrchr(path, '/');
-    if (ret==nullptr)
-        return path;
-    ret++;
-    return ret;
-}
-#endif
+#include "errors.h"
+#include "handlefile.h"
+#include "writearray.h"
 
 #define VERSION "0.0.0.next"
 
@@ -55,161 +49,40 @@ static const char HELPTEXT[] =
 //static unsigned line_length_ = 400;
 static char c_path_[PATH_MAX];
 static char h_path_[PATH_MAX];
-
-typedef struct {
-    const char* in_path;
-    const char* length_name;
-    const char* array_name;
-    off_t file_length;
-    bool create_header; // TODO use
-} InputFileParams;
-
-typedef struct {
-    const char* c_path;
-    const char* h_path;
-    size_t line_length; // TODO use
-    // TODO add more style stuff. base, etc
-    size_t num_inputs;
-    InputFileParams inputs[];
-} OutputFileParams;
-
-static bool handleFile(const ArrgenParams* params) ATTR_NONNULL;
-static bool writeH(const ArrgenParams* params, size_t length) ATTR_NONNULL;
-static bool writeC(const ArrgenParams* params, const uint8_t* buf, size_t length) ATTR_NONNULL;
-static bool writeArrayContentsStreamed(const uint8_t* buf, size_t length) ATTR_NONNULL;
+const char* program_name_;
 
 int main(int arg_num, const char** args) {
     program_name_ = args[0];
-    if (UNLIKELY(arg_num < 2)) {
-        fprintf(stderr, "%s: you forgot to give me a file\n", program_name_);
-        return 1;
-    }
-    ArrgenParams params;
+    if (UNLIKELY(arg_num < 2))
+        myFatal("you forgot to give me a file");
+    initializeLookup(10, false);
+
+    static OutputFileParams* params;
     // initial default skeleton, will add better argument parsing later
-    params.in_path = args[1];
-    int c_path_len = snprintf(c_path_, PATH_MAX, "%s.c", params.in_path);
-    if (c_path_len >= (PATH_MAX-1)) {
-        fprintf(stderr, "%s: %s.c: output path too long\n", program_name_, params.in_path);
-        return 1;
-    }
-    params.c_path = c_path_;
+    params = malloc(sizeof(OutputFileParams) + sizeof(InputFileParams)*1);
+    params->num_inputs = 1;
+    if (UNLIKELY(params==NULL))
+        myFatalErrno("failed to allocate memory");
 
-    int h_path_len = snprintf(h_path_, PATH_MAX, "%s.h", params.in_path);
-    if (h_path_len >= (PATH_MAX-1)) {
-        fprintf(stderr, "%s: %s.h: output path too long\n", program_name_, params.in_path);
-        return 1;
-    }
-    params.h_path = h_path_;
+    params->inputs[0].path = args[1];
+    int c_path_len = snprintf(c_path_, PATH_MAX, "%s.c", params->inputs[0].path);
+    if (c_path_len >= (PATH_MAX-1))
+        myFatal("%s.c: output path too long", params->inputs[0].path);
+    params->c_path = c_path_;
 
-    params.length_name = "LENGTH_NAME_TODO";
+    int h_path_len = snprintf(h_path_, PATH_MAX, "%s.h", params->inputs[0].path);
+    if (h_path_len >= (PATH_MAX-1))
+        myFatal("%s.h: output path too long", params->inputs[0].path);
+    params->h_path = h_path_;
 
-    params.array_name = "ARRAY_NAME_TODO";
+    params->create_header = true;
 
-    return handleFile(&params);
+    params->inputs[0].length_name = "LENGTH_NAME_TODO";
+
+    params->inputs[0].array_name = "ARRAY_NAME_TODO";
+
+    bool status = handleFile(params);
+    free(params);
+    return !status;
 }
 
-static bool handleFile(const ArrgenParams* params) {
-    bool ret;
-    size_t length;
-#ifdef MMAP_SUPPORTED
-    int fd = open(params->in_path, O_RDONLY);
-    if (UNLIKELY(fd<0)) {
-        fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->in_path, strerror(errno));
-        ret = false;
-    } else {
-        struct stat stats;
-        if (UNLIKELY(fstat(fd, &stats)!=0)) {
-            fprintf(stderr, "%s: %s: could not fstat: %s\n", program_name_, params->in_path, strerror(errno));
-            ret = false;
-        } else {
-            switch (stats.st_mode & S_IFMT) {
-            case S_IFREG: {
-                const uint8_t* mem = (const uint8_t*) mmap(NULL, stats.st_size, PROT_READ, MAP_SHARED, fd, 0);
-                if (UNLIKELY(mem==MAP_FAILED)) {
-                    fprintf(stderr, "%s: %s: mmap: %s\n", program_name_, params->in_path, strerror(errno));
-                    ret = false;
-                } else {
-                    ret = writeC(params, mem, stats.st_size);
-                    length = stats.st_size;
-                    if (UNLIKELY(munmap((void*)mem, stats.st_size))!=0)
-                        fprintf(stderr, "%s: %s: munmap: %s\n", program_name_, params->in_path, strerror(errno));
-                }
-                }; break;
-            case S_IFBLK:
-                fprintf(stderr, "%s: %s: what the heck are you doing?\n", program_name_, params->in_path);
-                ret = false;
-                break;
-            default:
-                // TODO: handle as pipe but that probably needs a restructuring... I guess not a big one
-                fprintf(stderr, "%s: %s: currently only regular files are supported, sorry\n", program_name_, params->in_path);
-                ret = false;
-                break;
-            }
-        }
-        if (UNLIKELY(close(fd)!=0))
-            fprintf(stderr, "%s: %s: could not close: %s\n", program_name_, params->in_path, strerror(errno));
-    }
-#else // MMAP_SUPPORTED
-    writeC(params, "TODO stuff", strlen("TODO stuff"));
-    // TODO implement using C stdio
-#endif // MMAP_SUPPORTED
-    return (ret && (params->h_path == NULL || writeH(params, length)));
-}
-
-static bool writeH(const ArrgenParams* params, size_t length) {
-    FILE *out = fopen(params->h_path, "wb");
-    bool ret;
-    if (UNLIKELY(out==NULL)) {
-        fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->h_path, strerror(errno));
-        ret = false;
-    } else {
-        fprintf(out,
-            "#define %s %zuU\n"
-            "\n"
-            "#ifdef __cplusplus\n"
-            "extern \"C\" {\n"
-            "#endif // __cplusplus\n"
-            "\n"
-            "extern const unsigned char %s[%s];\n"
-            "\n"
-            "#ifdef __cplusplus\n"
-            "}\n"
-            "#endif // __cplusplus\n",
-            params->length_name,
-            length,
-            params->array_name,
-            params->length_name);
-        if (UNLIKELY(fclose(out)!=0))
-            fprintf(stderr, "%s: %s: could not close: %s\n", program_name_, params->h_path, strerror(errno));
-        ret = true;
-    }
-    return (ret);
-}
-
-static bool writeC(const ArrgenParams* params, const uint8_t* buf, size_t length) {
-    FILE *out = fopen(params->c_path, "wb"); // CLRF is icky
-    bool ret = true;
-    if (UNLIKELY(out==NULL)) {
-        fprintf(stderr, "%s: %s: could not open: %s\n", program_name_, params->c_path, strerror(errno));
-        ret = false;
-    } else {
-        // TODO: actually, maybe have the writeC return the number of bytes written... that way it can handle pipes gracefully? do I care about that?
-        fprintf(out,
-            "#include \"%s\"\n"
-            "const unsigned char %s[%s] = {",
-            basename(params->h_path),
-            params->array_name,
-            params->length_name);
-        // TODO optimize this, this will be horribly slow
-        for (size_t i=0; i<length-1; i++)
-            fprintf(out, "%u,", (unsigned)buf[i]);
-        if (length>0)
-            fprintf(out, "%u", (unsigned)buf[length-1]);
-        // TODO: consider whether to optimize by removing trailing zeros in the generated array
-        fprintf(out, "};");
-
-        if (UNLIKELY(fclose(out)!=0))
-            fprintf(stderr, "%s: %s: could not close: %s\n", program_name_, params->c_path, strerror(errno));
-    }
-    return (ret);
-}

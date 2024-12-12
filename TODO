@@ -11,3 +11,6 @@
 -make it have an option to print the license, that's required by GPL right?
 -optimize for: speed of this program, generated file size, speed of compiling the generated file
 -add options for generated text mode, something like: compact, aligned hex, octal, aligned decimal, etc...
+-optionally write to temporary files first then move
+-use the #line thing, IF it's possible for the input file to result in errors in the generated code. But I don't think it will be
+-make it accept - to read from standard input

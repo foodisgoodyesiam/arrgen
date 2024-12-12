@@ -16,17 +16,28 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef HANDLEFILE_H_INCLUDED
+#define HANDLEFILE_H_INCLUDED
 #include "arrgen.h"
-#include "writearray.h"
 
-void initializeLookup(uint8_t base, bool aligned) {
-    // TODO
-}
+typedef struct {
+    const char* path;
+    const char* length_name;
+    const char* array_name;
+} InputFileParams;
 
-// TODO: make it return error information
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length) {
-    // TODO implement with lookup table
-    for (size_t i=0; i<length-1; i++)
-        fprintf(out, "%u,", (unsigned)buf[i]);
-}
+typedef struct {
+    const char* c_path;
+    const char* h_path;
+    size_t line_length; // TODO use
+    bool create_header; // TODO use
+    // TODO add more style stuff. base, etc
+    size_t num_inputs;
+    InputFileParams inputs[];
+} OutputFileParams;
 
+bool handleFile(const OutputFileParams* params)
+    ATTR_ACCESS(read_only(1))
+    ATTR_NONNULL;
+
+#endif // HANDLEFILE_H_INCLUDED

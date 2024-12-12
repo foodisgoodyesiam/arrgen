@@ -16,17 +16,15 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef WRITEARRAY_H_INCLUDED
+#define WRITEARRAY_H_INCLUDED
 #include "arrgen.h"
-#include "writearray.h"
+#include <stdio.h>
 
-void initializeLookup(uint8_t base, bool aligned) {
-    // TODO
-}
+void initializeLookup(uint8_t base, bool aligned);
 
-// TODO: make it return error information
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length) {
-    // TODO implement with lookup table
-    for (size_t i=0; i<length-1; i++)
-        fprintf(out, "%u,", (unsigned)buf[i]);
-}
+void writeArrayContents(FILE* out, const uint8_t *buf, size_t length)
+    ATTR_ACCESS(read_only (1, 2))
+    ATTR_NONNULL;
 
+#endif // WRITEARRAY_H_INCLUDED
