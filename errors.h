@@ -49,7 +49,7 @@ void myError(const char* restrict message, ...)
  * @brief prints formatted error message and string describing meaning of errno in format (program_name: message: errno meaning) to standard error, then quits
  * @param message printf-formatted message string
 */
-void myFatalErrno(const char* restrict message, ...)
+noreturn void myFatalErrno(const char* restrict message, ...)
     ATTR_COLD
     ATTR_NONNULL_N(1)
     ATTR_NOTHROW
@@ -60,7 +60,7 @@ void myFatalErrno(const char* restrict message, ...)
  * @brief prints formatted error message preceeded by program name to standard error, then quits
  * @param message printf-formatted message string
 */
-void myFatal(const char* restrict message, ...)
+noreturn void myFatal(const char* restrict message, ...)
     ATTR_COLD
     ATTR_NONNULL_N(1)
     ATTR_NOTHROW

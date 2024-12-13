@@ -20,11 +20,9 @@
 #include "errors.h"
 #include <stdio.h>
 #include <stdarg.h>
-//#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-//#include <unistd.h>
 
 // I don't care about optimizing these functions for speed, so repeated calls to vsnprintf are fine.
 

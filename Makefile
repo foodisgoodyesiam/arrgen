@@ -17,6 +17,12 @@
 
 # 0 for production, 1 for debug (with sanitize and debug symbols), 2 for verbose debug (extra logging statements)
 DEBUG ?= 0
+# 0 for no lto, 1 for lto, 2 for lto with whole-program optimization (only supported for gcc)
+ifeq ($(DEBUG),0)
+	lto ?= 2
+else
+	lto ?= 0
+endif
 
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
@@ -28,9 +34,14 @@ else
 		CPPFLAGS ::= $(CPPFLAGS) -DVERBOSE_DEBUG
 	endif
 endif
+ifneq ($(lto),0)
+	CFLAGS := $(CFLAGS) -flto=auto
+endif
 LDFLAGS ?= $(CFLAGS)
-
 CFLAGS := $(CFLAGS) -MMD
+ifeq ($(lto),2)
+	LDFLAGS := $(LDFLAGS) -fwhole-program
+endif
 
 .PHONY: clean install
 

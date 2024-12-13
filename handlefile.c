@@ -27,26 +27,26 @@
 
 #if !defined(__GLIBC__) && !defined(__CYGWIN__)
 static const char* basename(const char* path)
-    ATTR_ACCESS(1)
+    ATTR_ACCESS(read_only, 1)
     ATTR_NONNULL;
 #   define USE_CUSTOM_BASENAME
 #endif
 
 static bool writeH(const OutputFileParams* params, const size_t lengths[])
-    ATTR_ACCESS(read_only(1))
-    ATTR_ACCESS(read_only(2))
+    ATTR_ACCESS(read_only, 1)
+    ATTR_ACCESS(read_only, 2)
     ATTR_NONNULL;
 
 static bool writeC(const OutputFileParams* params, size_t lengths[])
-    ATTR_ACCESS(read_only(1))
-    ATTR_ACCESS(write_only(2))
+    ATTR_ACCESS(read_only, 1)
+    ATTR_ACCESS(write_only, 2)
     ATTR_NONNULL;
 
 static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path)
     ATTR_NONNULL;
 
 ssize_t writeFileContents(FILE* out, const InputFileParams *input)
-    ATTR_ACCESS(read_only(2))
+    ATTR_ACCESS(read_only, 2)
     ATTR_NONNULL;
 
 bool handleFile(const OutputFileParams* params) {

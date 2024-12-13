@@ -24,7 +24,7 @@
 void initializeLookup(uint8_t base, bool aligned);
 
 void writeArrayContents(FILE* out, const uint8_t *buf, size_t length)
-    ATTR_ACCESS(read_only (1, 2))
+    ATTR_ACCESS(read_only, 2, 3)
     ATTR_NONNULL;
 
 #endif // WRITEARRAY_H_INCLUDED

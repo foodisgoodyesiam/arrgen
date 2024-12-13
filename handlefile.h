@@ -37,7 +37,7 @@ typedef struct {
 } OutputFileParams;
 
 bool handleFile(const OutputFileParams* params)
-    ATTR_ACCESS(read_only(1))
+    ATTR_ACCESS(read_only, 1)
     ATTR_NONNULL;
 
 #endif // HANDLEFILE_H_INCLUDED
