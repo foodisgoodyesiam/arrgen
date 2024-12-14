@@ -26,7 +26,7 @@ void initializeLookup(uint8_t base, bool aligned) {
 // TODO: make it return error information
 void writeArrayContents(FILE* out, const uint8_t *buf, size_t length) {
     // TODO implement with lookup table
-    for (size_t i=0; i<length-1; i++)
+    for (size_t i=0; i<length; i++)
         fprintf(out, "%u,", (unsigned)buf[i]);
 }
 
