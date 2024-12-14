@@ -32,10 +32,13 @@
 #include "writearray.h"
 
 #if !defined(__GLIBC__) && !defined(__CYGWIN__)
-static const char* basename(const char* path)
+static const char* customBasename(const char* path)
     ATTR_ACCESS(read_only, 1)
     ATTR_NONNULL;
 #   define USE_CUSTOM_BASENAME
+#   define BASENAME(a) customBasename(a)
+#else
+#   define BASENAME(a) basename(a)
 #endif
 
 static bool writeH(const OutputFileParams* params, const size_t lengths[])
@@ -242,7 +245,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
 }
 
 #ifdef USE_CUSTOM_BASENAME
-static const char* basename(const char* path) {
+static const char* customBasename(const char* path) {
     const char* ret = strrchr(path, '/');
     if (ret==nullptr)
         return path;
