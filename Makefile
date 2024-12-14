@@ -20,7 +20,7 @@ DEBUG ?= 0
 
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
-	optflags ?= -O2
+	optflags ?= -O3
 	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration
 	CXXFLAGS ?= $(optflags) -Werror=format
 	CPPFLAGS ?= -DNDEBUG

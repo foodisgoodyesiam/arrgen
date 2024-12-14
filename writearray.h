@@ -24,10 +24,21 @@
 extern "C" {
 #endif // __cplusplus
 
+/**
+ * @brief initialize the lookup table for the writeArrayContents function. must be called before it's run
+*/
 void initializeLookup(uint8_t base, bool aligned);
 
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length)
+/**
+ * @brief writes array
+ * @param out the file to write to
+ * @param buf the bytes to turn into text
+ * @param length the number of bytes in buf
+ * @param cur_line_pos the current position in the output line, should be -1 the first time this is called for a given array
+*/
+void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos)
     ATTR_ACCESS(read_only (1, 2))
+    ATTR_ACCESS(read_write, 4)
     ATTR_HOT
     ATTR_NONNULL;
 

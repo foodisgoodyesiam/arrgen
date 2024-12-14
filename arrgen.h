@@ -122,7 +122,6 @@
 #endif
 
 #ifdef __cplusplus
-#   define ARRGEN_EXTERNC
 extern "C" {
 #endif // __cplusplus
 extern unsigned arrgen_pagesize_;

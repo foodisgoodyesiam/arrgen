@@ -40,11 +40,16 @@ static unsigned constructPagesize() {
 
 #elif defined(UNIX_PAGESIZE)
 #   include <unistd.h>
+#   ifdef _SC_PAGESIZE
 static unsigned constructPagesize() {
-    //return sysconf(_SC_PAGESIZE);
-    return getpagesize();
+    return sysconf(_SC_PAGESIZE);
 }
 
+#   else
+static unsigned constructPagesize() {
+    return getpagesize();
+}
+#   endif
 #else
 // dummy placeholder. the purpose of pagesize is just to know whether to madvise, so if I don't know the OS, this won't be used anyways
 static unsigned constructPagesize() {

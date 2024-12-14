@@ -18,15 +18,26 @@
 
 #include "arrgen.h"
 #include "writearray.h"
+#include "errors.h"
 
 void initializeLookup(uint8_t base, bool aligned) {
     // TODO
 }
 
-// TODO: make it return error information
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length) {
+// TODO: make it return error information instead of quitting?
+void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos) {
     // TODO implement with lookup table
-    for (size_t i=0; i<length; i++)
-        fprintf(out, "%u,", (unsigned)buf[i]);
+    size_t i=0;
+    if (UNLIKELY(*cur_line_pos < 0)) {
+        *cur_line_pos = fprintf(out, "%u", (unsigned)buf[i++]);
+        if (UNLIKELY(*cur_line_pos < 0))
+            myFatalErrno("fprintf");
+    }
+    for (; i<length; i++) {
+        int cur_printed = fprintf(out, ",%u", (unsigned)buf[i]);
+        if (UNLIKELY(cur_printed < 0))
+            myFatalErrno("fprintf");
+        *cur_line_pos += cur_printed;
+    }
 }
 
