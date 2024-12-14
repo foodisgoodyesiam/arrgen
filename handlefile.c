@@ -48,10 +48,10 @@ static bool writeC(const OutputFileParams* params, size_t lengths[])
     ATTR_ACCESS(write_only, 2)
     ATTR_NONNULL;
 
-static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path)
+static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size_t line_limit)
     ATTR_NONNULL;
 
-ssize_t writeFileContents(FILE* out, const InputFileParams *input)
+static ssize_t writeFileContents(FILE* out, const OutputFileParams *output, size_t index)
     ATTR_ACCESS(read_only, 2)
     ATTR_NONNULL;
 
@@ -132,7 +132,7 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
                 "const unsigned char %s[%s] = {",
                 input.array_name,
                 input.length_name);
-            ssize_t length = writeFileContents(out, &input);
+            ssize_t length = writeFileContents(out, params, i);
             ret = LIKELY(length>=0);
             if (!ret)
                 break;
@@ -149,8 +149,9 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
     return (ret);
 }
 
-ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
+static ssize_t writeFileContents(FILE* out, const OutputFileParams *output, size_t index) {
     DLOG("entering function");
+    const InputFileParams *input = &output->inputs[index];
     ssize_t length;
     // following a no-early-return policy here because of the various unwinding necessary
 #ifdef ARRGEN_MMAP_SUPPORTED
@@ -181,7 +182,7 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                             myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path, length, mem);
                     }
                     ssize_t cur_line_pos = -1;
-                    writeArrayContents(out, mem, length, &cur_line_pos);
+                    writeArrayContents(out, mem, length, &cur_line_pos, output->line_length);
                     if (UNLIKELY(munmap((void*)mem, length))!=0)
                         myErrorErrno("%s: munmap", input->path);
                 }
@@ -198,7 +199,7 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                     if (UNLIKELY(close(fd)!=0))
                         myErrorErrno("%s: could not close fd %d", input->path, fd);
                 } else {
-                    length = writeArrayStreamed(out, in, input->path);
+                    length = writeArrayStreamed(out, in, input->path, output->line_length);
                     if (UNLIKELY(fclose(in)!=0))
                         myErrorErrno("%s: could not fclose", input->path);
                 }
@@ -221,7 +222,7 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     return (length);
 }
 
-static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path) {
+static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size_t line_limit) {
     DLOG("entering function: %p, %p, %s", out, in, in_path);
     size_t num_read = ARRGEN_BUFFER_SIZE, total_length;
     static uint8_t buf[ARRGEN_BUFFER_SIZE];
@@ -235,7 +236,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path) {
                 myError("%s: read: %s", in_path, strerror(error));
         }
         DLOG("%s: num_read = %zu\ttotal_length=%zu", in_path, num_read, total_length);
-        writeArrayContents(out, buf, num_read, &cur_line_pos);
+        writeArrayContents(out, buf, num_read, &cur_line_pos, line_limit);
     }
     return (error==0 ? total_length : -1);
 }
