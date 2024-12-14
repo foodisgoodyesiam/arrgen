@@ -70,6 +70,8 @@ int main(int arg_num, const char** args) {
 
     params->create_header = true;
 
+    params->line_length = 0U;
+
     params->inputs[0].length_name = "LENGTH_NAME_TODO";
 
     params->inputs[0].array_name = "ARRAY_NAME_TODO";

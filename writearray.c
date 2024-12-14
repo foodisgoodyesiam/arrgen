@@ -84,12 +84,12 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
                 myFatalErrno("fwrite");
             *cur_line_pos += cur_printed;
         }
+    } else {
         if (UNLIKELY(*cur_line_pos < 0)) {
             *cur_line_pos = 0;
             if (line_limit != 0)
                 fprintf(out, "\n    ");
         }
-    } else {
         for (; i<length; i+=num_to_print) {
             if (UNLIKELY(*cur_line_pos >= line_limit))
                 fprintf(out, "\n    ");
@@ -102,4 +102,3 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
         }
     }
 }
-
