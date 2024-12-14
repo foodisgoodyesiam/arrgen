@@ -15,9 +15,25 @@
 # you should have received a copy of the gnu general public license
 # along with this file.  if not, see <https://www.gnu.org/licenses/>.
 
-# 0 for production, 1 for debug (with sanitize and debug symbols), 2 for verbose debug (extra logging statements)
+# extra setting variables:
+# DEBUG:
+#   0 for production
+#   1 for debug (with sanitize and debug symbols)
+#   2 for verbose debug (extra logging statements)
+#   default is 0
+# lto:
+#   0 for no link-time optimization
+#   1 for link-time optimization
+#   2 for whole-program optimization (only supported for gcc)
+#   default is 2
+# optflags:
+#   optimization level added to CFLAGS and CXXFLAGS
+#   default is -O2 for no debug and -Og otherwise. you can add stuff like -march=native.
+# prefix:
+#   directory to install arrgen for the install target
+#   default is /usr/local/bin
+
 DEBUG ?= 0
-# 0 for no lto, 1 for lto, 2 for lto with whole-program optimization (only supported for gcc)
 ifeq ($(DEBUG),0)
 	lto ?= 2
 else
@@ -27,24 +43,24 @@ endif
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
 	optflags ?= -O2
-	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration
-	CXXFLAGS ?= $(optflags) -Werror=format
+	CFLAGS ?= -Werror=format -Werror=implicit-function-declaration
+	CXXFLAGS ?= -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
 	optflags ?= -Og
-	CFLAGS ?= $(optflags) -fsanitize=address,undefined,leak -g
-	CXXFLAGS ?= $(optflags) -fsanitize=address,undefined,leak -g
+	CFLAGS ?= -fsanitize=address,undefined,leak -g
+	CXXFLAGS ?= -fsanitize=address,undefined,leak -g
 	ifeq ($(DEBUG),2)
 		CPPFLAGS ::= $(CPPFLAGS) -DVERBOSE_DEBUG
 	endif
 endif
 ifneq ($(lto),0)
-	CFLAGS := $(CFLAGS) -flto=auto
-	CXXFLAGS := $(CXXFLAGS) -flto=auto
+	optflags := $(optflags) -flto=auto
 endif
 LDFLAGS ?= $(CFLAGS)
-CFLAGS := $(CFLAGS) -MMD
-CXXFLAGS := $(CXXFLAGS) -MMD
+CFLAGS := $(optflags) $(CFLAGS) -MMD
+CXXFLAGS := $(optflags) $(CXXFLAGS) -MMD
+LDFLAGS := $(optflags) $(LDFLAGS)
 ifeq ($(lto),2)
 	LDFLAGS := $(LDFLAGS) -fwhole-program
 endif
