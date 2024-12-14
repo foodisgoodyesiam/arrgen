@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
     const char* c_path;
-    const char* h_path;
+    const char* h_name;
     size_t line_length; // TODO use. if 0, line length unlimited. otherwise, will only print this many bytes per line
     bool create_header; // TODO use
     size_t num_inputs;

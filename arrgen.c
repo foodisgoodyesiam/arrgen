@@ -16,13 +16,12 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include "arrgen.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <malloc.h>
-#include "arrgen.h"
 #include "errors.h"
 #include "handlefile.h"
 #include "writearray.h"
@@ -38,9 +37,8 @@ static const char HELPTEXT[] =
     "TODO\n"
     ;
 
-//static unsigned line_length_ = 400;
 static char c_path_[PATH_MAX];
-static char h_path_[PATH_MAX];
+static char h_name_[PATH_MAX];
 const char* program_name_;
 
 int main(int arg_num, const char** args) {
@@ -48,7 +46,10 @@ int main(int arg_num, const char** args) {
     program_name_ = args[0];
     if (UNLIKELY(arg_num < 2))
         myFatal("you forgot to give me a file");
-    initializeLookup(10, false);
+
+    uint8_t base = 10U; // must be 8, 10, or 16
+    bool aligned = false;
+    initializeLookup(base, aligned);
 
     static OutputFileParams* params;
     // initial default skeleton, will add better argument parsing later
@@ -63,10 +64,8 @@ int main(int arg_num, const char** args) {
         myFatal("%s.c: output path too long", params->inputs[0].path);
     params->c_path = c_path_;
 
-    int h_path_len = snprintf(h_path_, PATH_MAX, "%s.h", params->inputs[0].path);
-    if (h_path_len >= (PATH_MAX-1))
-        myFatal("%s.h: output path too long", params->inputs[0].path);
-    params->h_path = h_path_;
+    int h_name_len = snprintf(h_name_, PATH_MAX, "%s.h", ARRGEN_BASENAME(params->inputs[0].path));
+    params->h_name = h_name_;
 
     params->create_header = true;
 

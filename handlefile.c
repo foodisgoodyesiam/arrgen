@@ -16,8 +16,6 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
-#include <string.h>
 #include <inttypes.h>
 #include <errno.h>
 #include "arrgen.h"
@@ -30,16 +28,6 @@
 #include "handlefile.h"
 #include "errors.h"
 #include "writearray.h"
-
-#if !defined(__GLIBC__) && !defined(__CYGWIN__)
-static const char* customBasename(const char* path)
-    ATTR_ACCESS(read_only, 1)
-    ATTR_NONNULL;
-#   define USE_CUSTOM_BASENAME
-#   define BASENAME(a) customBasename(a)
-#else
-#   define BASENAME(a) basename(a)
-#endif
 
 static bool writeH(const OutputFileParams* params, const size_t lengths[])
     ATTR_ACCESS(read_only, 1)
@@ -65,10 +53,19 @@ bool handleFile(const OutputFileParams* params) {
 
 static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
     DLOG("entering function");
-    FILE *out = fopen(params->h_path, "wb");
+    // this is a clunky way of handling it, but whatever
+    char h_path[strlen(params->c_path) + strlen(params->h_name)+2]; // +2 for / and null terminator, in the worst case...? worse than the worst case
+    strcpy(h_path, params->c_path);
+    char* spot_to_insert_header_name = strchr(h_path, '/');
+    if (spot_to_insert_header_name==NULL)
+        spot_to_insert_header_name = h_path;
+    else
+        spot_to_insert_header_name++;
+    strcpy(spot_to_insert_header_name, params->h_name);
+    FILE *out = fopen(h_path, "wb");
     bool ret;
     if (UNLIKELY(out==NULL)) {
-        myErrorErrno("%s: could not open", params->h_path);
+        myErrorErrno("%s: could not open", h_path);
         ret = false;
     } else {
         // TODO: fail gracefully if any fprintf fails
@@ -110,7 +107,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
             // TODO
         }
         if (UNLIKELY(fclose(out)!=0))
-            myErrorErrno("%s: could not close", params->h_path);
+            myErrorErrno("%s: could not close", h_path);
         ret = true;
     }
     DLOG("returning %hhu", ret);
@@ -128,7 +125,7 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
         // TODO make it figure out the correct include path? or just force the header and c file to be in the same directory
         fprintf(out,
             "#include \"%s\"\n",
-            basename(params->h_path));
+            params->h_name);
         for (size_t i=0; i<params->num_inputs; i++) {
             const InputFileParams input = params->inputs[i];
             fprintf(out,
@@ -245,13 +242,13 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
 }
 
 #ifdef USE_CUSTOM_BASENAME
-static const char* customBasename(const char* path) {
+const char* customBasename(const char* path) {
     const char* ret = strrchr(path, '/');
     if (ret==nullptr)
         return path;
     ret++;
     return ret;
 }
-#endif // USE_CUSTOM_BASENAME
+#endif // USE_CUSTOM_ARRGEN_BASENAME
 
 

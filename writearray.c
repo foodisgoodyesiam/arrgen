@@ -63,17 +63,10 @@ void initializeLookup(uint8_t base, bool aligned) {
     }
 }
 
-// TODO: make it return error information instead of quitting?
+// TODO: make it return error information instead of quitting? or add some cleanup functionality to errors.c using global variables... probably I'll do that
 void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos, size_t line_limit) {
     size_t i=0;
     // TODO figure out if I want, or care, to remove the trailing comma with the lookup table implementation
-    // TODO figure out if it's better to have separate code paths for the line limited versions...
-    /*
-    if (UNLIKELY(*cur_line_pos < 0)) {
-        *cur_line_pos = fprintf(out, "%u", (unsigned)buf[i++]);
-        if (UNLIKELY(*cur_line_pos < 0))
-            myFatalErrno("fprintf");
-    }*/
     uint8_t num_to_print;
     if (line_limit == 0) { // no line limit
         for (; i<length; i+=num_to_print) {

@@ -21,6 +21,7 @@
 #ifndef _GNU_SOURCE // to silence annoying warnings because g++ predefines this and gcc doesn't
 #   define _GNU_SOURCE
 #endif
+#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -130,6 +131,18 @@
 extern "C" {
 #endif // __cplusplus
 extern unsigned arrgen_pagesize_;
+
+// hmm. clean this up to be more portable (why did I write it this way? glibc should be the special case not the assumed default)
+#if !defined(__GLIBC__) && !defined(__CYGWIN__)
+const char* customBasename(const char* path)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_NONNULL;
+#   define USE_CUSTOM_BASENAME
+#   define ARRGEN_BASENAME(a) customBasename(a)
+#else
+#   define ARRGEN_BASENAME(a) basename(a)
+#endif
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
