@@ -20,23 +20,63 @@
 #include "writearray.h"
 #include "errors.h"
 
+#ifndef ARRGEN_NUM_REPEATS
+#   define ARRGEN_NUM_REPEATS 10U
+#endif // ARRGEN_NUM_REPEATS
+
+typedef struct {
+    uint16_t offset;
+    uint8_t len;
+} ByteParams;
+
+static uint8_t base_;
+static bool aligned_;
+static ByteParams params_[256U];
+static char string_bank_[5U*256U*ARRGEN_NUM_REPEATS+1U] ATTR_NONSTRING; // TODO make this number less magic
+
 void initializeLookup(uint8_t base, bool aligned) {
-    // TODO
+    const char* format;
+    switch(base) {
+    case 8:
+        format = aligned ? "0%.3o," : "0%o,";
+        break;
+    case 10:
+        format = aligned ? "%u," : "%u,";
+        break;
+    case 16:
+        format = aligned ? "0x%.2X," : "0x%X,";
+        break;
+    default:
+        myFatal("unsupported base %u", (unsigned)base);
+    }
+    base_ = base;
+    aligned_ = aligned;
+    unsigned cur_pos = 0;
+    for (unsigned c=0U; c<256U; c++) {
+        params_[c].offset = cur_pos;
+        int written_len;
+        for (unsigned i = 0U; i<ARRGEN_NUM_REPEATS; i++) {
+            written_len = sprintf(&string_bank_[cur_pos], format, c);
+            cur_pos += written_len;
+        }
+        params_[c].len = written_len;
+    }
 }
 
 // TODO: make it return error information instead of quitting?
 void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos) {
-    // TODO implement with lookup table
     size_t i=0;
+    // TODO figure out if I want, or care, to remove the trailing comma with the lookup table implementation
+    /*
     if (UNLIKELY(*cur_line_pos < 0)) {
         *cur_line_pos = fprintf(out, "%u", (unsigned)buf[i++]);
         if (UNLIKELY(*cur_line_pos < 0))
             myFatalErrno("fprintf");
-    }
+    }*/
     for (; i<length; i++) {
-        int cur_printed = fprintf(out, ",%u", (unsigned)buf[i]);
+        int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, 1, out);
         if (UNLIKELY(cur_printed < 0))
-            myFatalErrno("fprintf");
+            myFatalErrno("fwrite");
         *cur_line_pos += cur_printed;
     }
 }

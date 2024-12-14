@@ -32,9 +32,8 @@ typedef struct {
 typedef struct {
     const char* c_path;
     const char* h_path;
-    size_t line_length; // TODO use
+    size_t line_length; // TODO use. if 0, line length unlimited. otherwise, will only print this many bytes per line
     bool create_header; // TODO use
-    // TODO add more style stuff. base, etc
     size_t num_inputs;
     InputFileParams inputs[];
 } OutputFileParams;

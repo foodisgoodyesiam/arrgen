@@ -87,6 +87,11 @@
 #else
 #   define ATTR_NOTHROW
 #endif
+#if __has_attribute(nonstring)
+#   define ATTR_NONSTRING __attribute__ ((nonstring))
+#else
+#   define ATTR_NONSTRING
+#endif
 #ifdef ARRGEN_H_TEMP_HAS_ATTRIBUTE
 #   undef __has_attribute // to not mess up headers included after this
 #endif
