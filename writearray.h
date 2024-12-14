@@ -20,18 +20,12 @@
 #define WRITEARRAY_H_INCLUDED
 #include "arrgen.h"
 #include <stdio.h>
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
-void initializeLookup(uint8_t base, bool aligned);
+ARRGEN_EXTERNC void initializeLookup(uint8_t base, bool aligned);
 
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length)
+ARRGEN_EXTERNC void writeArrayContents(FILE* out, const uint8_t *buf, size_t length)
     ATTR_ACCESS(read_only (1, 2))
     ATTR_HOT
     ATTR_NONNULL;
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 #endif // WRITEARRAY_H_INCLUDED

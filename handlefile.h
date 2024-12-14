@@ -19,9 +19,6 @@
 #ifndef HANDLEFILE_H_INCLUDED
 #define HANDLEFILE_H_INCLUDED
 #include "arrgen.h"
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 typedef struct {
     const char* path;
@@ -39,11 +36,9 @@ typedef struct {
     InputFileParams inputs[];
 } OutputFileParams;
 
+ARRGEN_EXTERNC
 bool handleFile(const OutputFileParams* params)
     ATTR_ACCESS(read_only(1))
     ATTR_NONNULL;
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 #endif // HANDLEFILE_H_INCLUDED
