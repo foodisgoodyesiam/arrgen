@@ -21,6 +21,7 @@ DEBUG ?= 0
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
 	CFLAGS ?= -O2 -Werror=format -Werror=implicit-function-declaration
+	CXXFLAGS ?= -O2 -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
 	CFLAGS ?= -Og -fsanitize=address,undefined,leak -g
@@ -29,8 +30,8 @@ else
 	endif
 endif
 LDFLAGS ?= $(CFLAGS)
-
 CFLAGS := $(CFLAGS) -MMD
+CXXFLAGS := $(CXXFLAGS) -MMD
 
 .PHONY: clean install
 
@@ -41,6 +42,7 @@ clean:
 arrgen: arrgen.o \
 	errors.o \
 	handlefile.o \
+	pagesize.o \
 	writearray.o
 
 install: $(prefix)/arrgen

@@ -21,6 +21,10 @@
 #include <stdnoreturn.h>
 #include "arrgen.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 extern const char* program_name_;
 
 /**
@@ -67,4 +71,7 @@ void myFatal(const char* restrict message, ...)
     ATTR_LEAF
     ATTR_FORMAT(printf, 1, 2);
 
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 #endif // ERRORS_H_INCLUDED

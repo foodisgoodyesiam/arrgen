@@ -21,6 +21,12 @@
 #include <inttypes.h>
 #include <errno.h>
 #include "arrgen.h"
+#ifdef ARRGEN_MMAP_SUPPORTED
+#   include <sys/mman.h>
+#   include <sys/stat.h>
+#   include <unistd.h>
+#   include <fcntl.h>
+#endif
 #include "handlefile.h"
 #include "errors.h"
 #include "writearray.h"
@@ -147,15 +153,15 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     DLOG("entering function");
     ssize_t length;
     // following a no-early-return policy here because of the various unwinding necessary
-#ifdef MMAP_SUPPORTED
-    int fd = open(input.path, O_RDONLY);
+#ifdef ARRGEN_MMAP_SUPPORTED
+    int fd = open(input->path, O_RDONLY);
     if (UNLIKELY(fd<0)) {
-        myErrorErrno("%s: could not open", input.path);
+        myErrorErrno("%s: could not open", input->path);
         length = -1;
     } else {
         struct stat stats;
         if (UNLIKELY(fstat(fd, &stats)!=0)) {
-            myErrorErrno("%s: could not fstat fd %d", input.path, fd);
+            myErrorErrno("%s: could not fstat fd %d", input->path, fd);
             length = -1;
         } else {
             switch (stats.st_mode & S_IFMT) {
@@ -164,35 +170,36 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                 // TODO: consider if it should fall back to streaming on mmap failure
                 const uint8_t* mem = (const uint8_t*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
                 if (UNLIKELY(close(fd)!=0))
-                    myErrorErrno("%s: could not close fd %d", input.path, fd);
+                    myErrorErrno("%s: could not close fd %d", input->path, fd);
                 if (UNLIKELY(mem==MAP_FAILED)) {
-                    myErrorErrno("%s: mmap", input.path);
+                    myErrorErrno("%s: mmap", input->path);
                     length = -1;
                 } else {
-                    if (length > pagesize_) {
-                        if (UNLIKELY(madvise(mem, length, advice))
-                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input.path, length, mem);
+                    if (length > arrgen_pagesize_) {
+                        // why the frick does madvise not qualify the argument with const...
+                        if (UNLIKELY(madvise((void*)mem, length, MADV_SEQUENTIAL)))
+                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path, length, mem);
                     }
                     writeArrayContents(out, mem, length);
                     if (UNLIKELY(munmap((void*)mem, length))!=0)
-                        myErrorErrno("%s: munmap", params->in_path);
+                        myErrorErrno("%s: munmap", input->path);
                 }
                 }; break;
             case S_IFBLK:
-                myError("%s: what the heck are you doing?", params->in_path);
+                myError("%s: what the heck are you doing?", input->path);
                 length = -1;
                 break;
             default: {
                 FILE* in = fdopen(fd, "rb");
                 if (UNLIKELY(in==NULL)) {
-                    myErrorErrno("%s: could not fdopen %d", input.path, fd);
+                    myErrorErrno("%s: could not fdopen %d", input->path, fd);
                     length = -1;
                     if (UNLIKELY(close(fd)!=0))
-                        myErrorErrno("%s: could not close fd %d", input.path, fd);
+                        myErrorErrno("%s: could not close fd %d", input->path, fd);
                 } else {
-                    length = writeArrayStreamed(out, in);
+                    length = writeArrayStreamed(out, in, input->path);
                     if (UNLIKELY(fclose(in)!=0))
-                        myErrorErrno("%s: could not fclose", input.path)
+                        myErrorErrno("%s: could not fclose", input->path);
                 }
                 } break;
             }
@@ -208,7 +215,7 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
         if (UNLIKELY(fclose(in)!=0))
             myErrorErrno("%s: could not fclose", input->path);
     }
-#endif // MMAP_SUPPORTED
+#endif // ARRGEN_MMAP_SUPPORTED
     DLOG("returning %zd", length);
     return (length);
 }

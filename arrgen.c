@@ -16,14 +16,6 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if (defined(__has_include) && __has_include(<sys/mman.h>)) || defined(__linux__) || defined(__APPLE__)
-#   include <sys/mman.h>
-#   include <sys/stat.h>
-#   include <unistd.h>
-#   include <fcntl.h>
-#   define MMAP_SUPPORTED
-#endif
-
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -52,6 +44,7 @@ static char h_path_[PATH_MAX];
 const char* program_name_;
 
 int main(int arg_num, const char** args) {
+    DLOG("arrgen_pagesize_ = %u", arrgen_pagesize_);
     program_name_ = args[0];
     if (UNLIKELY(arg_num < 2))
         myFatal("you forgot to give me a file");
