@@ -122,11 +122,13 @@
 #endif
 
 #ifdef __cplusplus
-#   define ARRGEN_EXTERNC extern "C"
-#else
-#   define ARRGEN_EXTERNC extern
+#   define ARRGEN_EXTERNC
+extern "C" {
 #endif // __cplusplus
-ARRGEN_EXTERNC unsigned arrgen_pagesize_;
+extern unsigned arrgen_pagesize_;
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // ARRGEN_H_INCLUDED
 
