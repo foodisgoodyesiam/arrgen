@@ -14,3 +14,5 @@
 -optionally write to temporary files first then move
 -use the #line thing, IF it's possible for the input file to result in errors in the generated code. But I don't think it will be
 -make it accept - to read from standard input
+-add fortran support
+-add assembly support (and check, it might be faster...)
