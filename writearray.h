@@ -34,9 +34,10 @@ void initializeLookup(uint8_t base, bool aligned);
  * @param out the file to write to
  * @param buf the bytes to turn into text
  * @param length the number of bytes in buf
- * @param cur_line_pos the current position in the output line, should be -1 the first time this is called for a given array
+ * @param cur_line_pos pointer to the current position in the output line, should be -1 the first time this is called for a given array
+ * @param line_limit the maximum number of bytes to print per line
 */
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos)
+void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos, size_t line_limit)
     ATTR_ACCESS(read_only (1, 2))
     ATTR_ACCESS(read_write, 4)
     ATTR_HOT

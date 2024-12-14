@@ -64,20 +64,42 @@ void initializeLookup(uint8_t base, bool aligned) {
 }
 
 // TODO: make it return error information instead of quitting?
-void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos) {
+void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *cur_line_pos, size_t line_limit) {
     size_t i=0;
     // TODO figure out if I want, or care, to remove the trailing comma with the lookup table implementation
+    // TODO figure out if it's better to have separate code paths for the line limited versions...
     /*
     if (UNLIKELY(*cur_line_pos < 0)) {
         *cur_line_pos = fprintf(out, "%u", (unsigned)buf[i++]);
         if (UNLIKELY(*cur_line_pos < 0))
             myFatalErrno("fprintf");
     }*/
-    for (; i<length; i++) {
-        int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, 1, out);
-        if (UNLIKELY(cur_printed < 0))
-            myFatalErrno("fwrite");
-        *cur_line_pos += cur_printed;
+    size_t num_to_print;
+    if (line_limit == 0) { // no line limit
+        for (; i<length; i+=num_to_print) {
+            // TODO optimize this by just finding the max possible value of num_to_print? is gcc smart enough to do that already?
+            for (num_to_print = 1U; i+num_to_print<length && num_to_print<ARRGEN_NUM_REPEATS && buf[i+num_to_print]==buf[i]; num_to_print++);
+            int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
+            if (UNLIKELY(cur_printed < num_to_print))
+                myFatalErrno("fwrite");
+            *cur_line_pos += cur_printed;
+        }
+        if (UNLIKELY(*cur_line_pos < 0)) {
+            *cur_line_pos = 0;
+            if (line_limit != 0)
+                fprintf(out, "\n    ");
+        }
+    } else {
+        for (; i<length; i+=num_to_print) {
+            if (UNLIKELY(*cur_line_pos >= line_limit))
+                fprintf(out, "\n    ");
+            // TODO optimize this by just finding the max possible value of num_to_print? is gcc smart enough to do that already?
+            for (num_to_print = 1U; i+num_to_print<length && num_to_print<ARRGEN_NUM_REPEATS && buf[i+num_to_print]==buf[i] && (num_to_print+*cur_line_pos) < line_limit; num_to_print++);
+            int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
+            if (UNLIKELY(cur_printed < num_to_print))
+                myFatalErrno("fwrite");
+            *cur_line_pos += cur_printed;
+        }
     }
 }
 
