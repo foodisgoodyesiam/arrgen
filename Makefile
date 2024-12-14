@@ -26,11 +26,14 @@ endif
 
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
-	CFLAGS ?= -O2 -Werror=format -Werror=implicit-function-declaration
-	CXXFLAGS ?= -O2 -Werror=format
+	optflags ?= -O2
+	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration
+	CXXFLAGS ?= $(optflags) -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
-	CFLAGS ?= -Og -fsanitize=address,undefined,leak -g
+	optflags ?= -Og
+	CFLAGS ?= $(optflags) -fsanitize=address,undefined,leak -g
+	CXXFLAGS ?= $(optflags) -fsanitize=address,undefined,leak -g
 	ifeq ($(DEBUG),2)
 		CPPFLAGS ::= $(CPPFLAGS) -DVERBOSE_DEBUG
 	endif
