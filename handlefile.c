@@ -180,7 +180,8 @@ ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                         if (UNLIKELY(madvise((void*)mem, length, MADV_SEQUENTIAL)))
                             myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path, length, mem);
                     }
-                    writeArrayContents(out, mem, length);
+                    ssize_t cur_line_pos = -1;
+                    writeArrayContents(out, mem, length, &cur_line_pos);
                     if (UNLIKELY(munmap((void*)mem, length))!=0)
                         myErrorErrno("%s: munmap", input->path);
                 }
@@ -225,6 +226,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path) {
     size_t num_read = ARRGEN_BUFFER_SIZE, total_length;
     static uint8_t buf[ARRGEN_BUFFER_SIZE];
     int error = 0;
+    ssize_t cur_line_pos = -1;
     for (total_length=0U; num_read==ARRGEN_BUFFER_SIZE; total_length+=num_read) {
         num_read = fread(buf, 1, ARRGEN_BUFFER_SIZE, in);
         if (UNLIKELY(num_read != ARRGEN_BUFFER_SIZE)) {
@@ -233,7 +235,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path) {
                 myError("%s: read: %s", in_path, strerror(error));
         }
         DLOG("%s: num_read = %zu\ttotal_length=%zu", in_path, num_read, total_length);
-        writeArrayContents(out, buf, num_read);
+        writeArrayContents(out, buf, num_read, &cur_line_pos);
     }
     return (error==0 ? total_length : -1);
 }

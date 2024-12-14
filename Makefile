@@ -42,9 +42,9 @@ endif
 
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
-	optflags ?= -O2
-	CFLAGS ?= -Werror=format -Werror=implicit-function-declaration
-	CXXFLAGS ?= -Werror=format
+	optflags ?= -O3
+	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration
+	CXXFLAGS ?= $(optflags) -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
 	optflags ?= -Og

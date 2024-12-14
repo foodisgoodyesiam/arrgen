@@ -1,4 +1,3 @@
--get rid of the trailing comma in printed array by having write array remember current line length
 -make line_length_ configurable
 -make option to generate the header or not
 -make it possible to configure other stuff
