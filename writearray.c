@@ -77,8 +77,8 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
     size_t num_to_print;
     if (line_limit == 0) { // no line limit
         for (; i<length; i+=num_to_print) {
-            // TODO optimize this by just finding the max possible value of num_to_print? is gcc smart enough to do that already?
-            for (num_to_print = 1U; i+num_to_print<length && num_to_print<ARRGEN_NUM_REPEATS && buf[i+num_to_print]==buf[i]; num_to_print++);
+            size_t max_num_to_print = LIKELY(ARRGEN_NUM_REPEATS < (length-i)) ? ARRGEN_NUM_REPEATS : length-i;
+            for (num_to_print = 1U; num_to_print < max_num_to_print && buf[i+num_to_print]==buf[i]; num_to_print++);
             int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
             if (UNLIKELY(cur_printed < num_to_print))
                 myFatalErrno("fwrite");
@@ -93,8 +93,10 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
         for (; i<length; i+=num_to_print) {
             if (UNLIKELY(*cur_line_pos >= line_limit))
                 fprintf(out, "\n    ");
-            // TODO optimize this by just finding the max possible value of num_to_print? is gcc smart enough to do that already?
-            for (num_to_print = 1U; i+num_to_print<length && num_to_print<ARRGEN_NUM_REPEATS && buf[i+num_to_print]==buf[i] && (num_to_print+*cur_line_pos) < line_limit; num_to_print++);
+            size_t max_num_to_print = LIKELY(ARRGEN_NUM_REPEATS < (length-i)) ? ARRGEN_NUM_REPEATS : length-i;
+            if (UNLIKELY(line_limit-*cur_line_pos < max_num_to_print))
+                max_num_to_print = line_limit-*cur_line_pos;
+            for (num_to_print = 1U; num_to_print < max_num_to_print && buf[i+num_to_print]==buf[i]; num_to_print++);
             int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
             if (UNLIKELY(cur_printed < num_to_print))
                 myFatalErrno("fwrite");
