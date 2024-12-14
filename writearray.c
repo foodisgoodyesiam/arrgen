@@ -80,9 +80,9 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
             uint8_t max_num_to_print = LIKELY(ARRGEN_NUM_REPEATS < (length-i)) ? ARRGEN_NUM_REPEATS : length-i;
             for (num_to_print = 1U; num_to_print < max_num_to_print && buf[i+num_to_print]==buf[i]; num_to_print++);
             int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
-            if (UNLIKELY(cur_printed < num_to_print))
+            if (UNLIKELY(cur_printed != num_to_print))
                 myFatalErrno("fwrite");
-            *cur_line_pos += cur_printed;
+            *cur_line_pos += num_to_print;
         }
     } else {
         if (UNLIKELY(*cur_line_pos < 0)) {
@@ -91,16 +91,18 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
                 fprintf(out, "\n    ");
         }
         for (; i<length; i+=num_to_print) {
-            if (UNLIKELY(*cur_line_pos >= line_limit))
+            if (UNLIKELY(*cur_line_pos >= line_limit)) {
                 fprintf(out, "\n    ");
+                *cur_line_pos = 0;
+            }
             uint8_t max_num_to_print = LIKELY(ARRGEN_NUM_REPEATS < (length-i)) ? ARRGEN_NUM_REPEATS : length-i;
             if (UNLIKELY(line_limit-*cur_line_pos < max_num_to_print))
                 max_num_to_print = line_limit-*cur_line_pos;
             for (num_to_print = 1U; num_to_print < max_num_to_print && buf[i+num_to_print]==buf[i]; num_to_print++);
             int cur_printed = fwrite(&string_bank_[params_[buf[i]].offset], params_[buf[i]].len, num_to_print, out);
-            if (UNLIKELY(cur_printed < num_to_print))
+            if (UNLIKELY(cur_printed != num_to_print))
                 myFatalErrno("fwrite");
-            *cur_line_pos += cur_printed;
+            *cur_line_pos += num_to_print;
         }
     }
 }
