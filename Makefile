@@ -27,6 +27,7 @@ endif
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
 	CFLAGS ?= -O2 -Werror=format -Werror=implicit-function-declaration
+	CXXFLAGS ?= -O2 -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
 	CFLAGS ?= -Og -fsanitize=address,undefined,leak -g
@@ -36,9 +37,11 @@ else
 endif
 ifneq ($(lto),0)
 	CFLAGS := $(CFLAGS) -flto=auto
+	CXXFLAGS := $(CXXFLAGS) -flto=auto
 endif
 LDFLAGS ?= $(CFLAGS)
 CFLAGS := $(CFLAGS) -MMD
+CXXFLAGS := $(CXXFLAGS) -MMD
 ifeq ($(lto),2)
 	LDFLAGS := $(LDFLAGS) -fwhole-program
 endif
@@ -52,6 +55,7 @@ clean:
 arrgen: arrgen.o \
 	errors.o \
 	handlefile.o \
+	pagesize.o \
 	writearray.o
 
 install: $(prefix)/arrgen

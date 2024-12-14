@@ -18,7 +18,9 @@
 
 #ifndef ARRGEN_H_INCLUDED
 #define ARRGEN_H_INCLUDED
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE // to silence annoying warnings because g++ predefines this and gcc doesn't
+#   define _GNU_SOURCE
+#endif
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -33,6 +35,14 @@
 #else
 #   warning "could not detect PATH_MAX, defaulting to 4096"
 #   define PATH_MAX 4096
+#endif
+
+#ifdef __has_include
+#   if __has_include(<sys/mman.h>)
+#       define ARRGEN_MMAP_SUPPORTED
+#   endif
+#elif defined(__linux__) || defined(__APPLE__)
+#   define ARRGEN_MMAP_SUPPORTED
 #endif
 
 #ifndef __has_attribute
@@ -110,6 +120,15 @@
 #ifndef ARRGEN_BUFFER_SIZE
 #   define ARRGEN_BUFFER_SIZE 65536U
 #endif
+
+#ifdef __cplusplus
+#   define ARRGEN_EXTERNC
+extern "C" {
+#endif // __cplusplus
+extern unsigned arrgen_pagesize_;
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // ARRGEN_H_INCLUDED
 

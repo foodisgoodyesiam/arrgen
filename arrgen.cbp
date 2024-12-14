@@ -46,6 +46,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="handlefile.h" />
+		<Unit filename="pagesize.cpp" />
 		<Unit filename="writearray.c">
 			<Option compilerVar="CC" />
 		</Unit>
