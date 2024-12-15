@@ -35,6 +35,8 @@ static ByteParams params_[256U];
 static char string_bank_[5U*256U*ARRGEN_NUM_REPEATS+1U] ATTR_NONSTRING; // TODO make this number less magic
 
 void initializeLookup(uint8_t base, bool aligned) {
+    if (base==base_ && aligned==aligned_)
+        return;
     const char* format;
     switch(base) {
     case 8:

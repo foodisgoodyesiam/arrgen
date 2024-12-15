@@ -10,3 +10,6 @@
 -make it accept - to read from standard input
 -add fortran support
 -add assembly support (and check, it might be faster...)
+-confirm windows build in msvc, mingw, cygwin, msys
+-test whether it works with unicode filenames on Windows
+-add gperf-style support for adding text at the top and bottom of the .c file

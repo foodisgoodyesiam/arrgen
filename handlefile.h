@@ -27,13 +27,16 @@ typedef struct {
     const char* path;
     const char* length_name;
     const char* array_name;
+    uint32_t alignment;
+    size_t line_length;
+    uint8_t base;
+    bool aligned;
 } InputFileParams;
 
 typedef struct {
     const char* c_path;
     const char* h_name;
-    size_t line_length; // TODO use. if 0, line length unlimited. otherwise, will only print this many bytes per line
-    bool create_header; // TODO use
+    bool create_header;
     size_t num_inputs;
     InputFileParams inputs[];
 } OutputFileParams;

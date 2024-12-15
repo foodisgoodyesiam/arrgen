@@ -93,6 +93,11 @@
 #else
 #   define ATTR_NONSTRING
 #endif
+#if __has_attribute(malloc)
+#   define ATTR_MALLOC __attribute__ ((malloc))
+#else
+#   define ATTR_MALLOC
+#endif
 #ifdef ARRGEN_H_TEMP_HAS_ATTRIBUTE
 #   undef __has_attribute // to not mess up headers included after this
 #endif
