@@ -70,6 +70,10 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
     size_t i=0;
     // TODO figure out if I want, or care, to remove the trailing comma with the lookup table implementation
     uint8_t num_to_print;
+    if (UNLIKELY(*cur_line_pos < 0)) {
+        *cur_line_pos = 0;
+        fprintf(out, "\n    ");
+    }
     if (line_limit == 0) { // no line limit
         for (; i<length; i+=num_to_print) {
             uint8_t max_num_to_print = LIKELY(ARRGEN_NUM_REPEATS < (length-i)) ? ARRGEN_NUM_REPEATS : length-i;
@@ -80,11 +84,6 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
             *cur_line_pos += num_to_print;
         }
     } else {
-        if (UNLIKELY(*cur_line_pos < 0)) {
-            *cur_line_pos = 0;
-            if (line_limit != 0)
-                fprintf(out, "\n    ");
-        }
         for (; i<length; i+=num_to_print) {
             if (UNLIKELY(*cur_line_pos >= line_limit)) {
                 fprintf(out, "\n    ");
