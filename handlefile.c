@@ -18,6 +18,7 @@
 
 #include <inttypes.h>
 #include <errno.h>
+#include <inttypes.h>
 #include "arrgen.h"
 #ifdef ARRGEN_MMAP_SUPPORTED
 #   include <sys/mman.h>
@@ -89,12 +90,20 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         fprintf(out, "\n");
         for (size_t i=0; i<params->num_inputs; i++) {
             // TODO hmm, what do I do if the input file name contains a newline
+            // TODO use the line pragma for attributes etc...? maybe unnecessary
             fprintf(out,
                 "// %s\n"
-                "extern const unsigned char %s[%s];\n",
+                "extern const unsigned char %s[%s]",
                 params->inputs[i].path,
                 params->inputs[i].array_name,
                 params->inputs[i].length_name);
+            if (params->inputs[i].attributes==NULL)
+                fprintf(out, ";\n");
+            else {
+                fprintf(out,
+                    " %s;\n",
+                    params->inputs[i].attributes);
+            }
         }
         fprintf(out,
             "\n"
@@ -122,7 +131,6 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
         myErrorErrno("%s: could not open", params->c_path);
         ret = false;
     } else {
-        // TODO make it figure out the correct include path? or just force the header and c file to be in the same directory
         fprintf(out,
             "#include \"%s\"\n",
             params->h_name);

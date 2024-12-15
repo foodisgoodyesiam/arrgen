@@ -49,7 +49,8 @@ static const char HELPTEXT[] =
     "-d                  Decimal (shortcut for --base=10)\n"
     "-x                  Hexadecimal (shortcut for --base=16)\n"
     "-8                  Octal (shortcut for --base=8)\n"
-    "    --alignment=    In generated header, add __attribute__ ((aligned)) with specified alignment. Default 0 (off)\n"
+    // TODO replace the below with attributes? so it could also specify memory sections?
+    "    --attributes=   In generated header, add attributes (eg __attribute__ ((whatever))) after declarations. Default off. can be used for memory alignment\n"
     "    --line_length=  Max num input bytes to print per line. Default 0 (no limit)\n"
     "    --c_path=       Put the generated .c file at this location. Default " DEFAULT_C_PATH "\n"
     "    --h_name=       Put the generated (or referenced) header file at this location relative to the .c file. Default " DEFAULT_H_NAME "\n"
@@ -59,7 +60,7 @@ static const char HELPTEXT[] =
 static OutputFileParams *params_ = NULL;
 static size_t current_params_size_ = sizeof(OutputFileParams) + sizeof(InputFileParams)*1; // current size of the allocated buffer for params
 static const char* params_file_ = NULL;
-static uint32_t default_alignment_ = 0U; // default memory alignment of generated arrays. 0 = no alignment
+static const char* default_attributes_ = NULL;
 static size_t default_line_length_ = 0U;
 static uint8_t default_base_ = 10U;
 static bool default_aligned_ = false; // whether or not to print numbers in fixed-width columns
@@ -68,7 +69,6 @@ const char* program_name_;
 
 static void addInputParam(const char* path);
 static uint8_t parseBase(const char* str);
-static uint32_t parseAlignment(const char* str);
 static size_t parseLineLength(const char* str);
 
 int main(int arg_num, const char** args) {
@@ -107,8 +107,8 @@ int main(int arg_num, const char** args) {
                     if (UNLIKELY(params_->h_name != NULL))
                         myFatal("cannot give h_name more than once");
                     params_->h_name = &args[i][strlen("--h_name=")];
-                } else if (!strncmp(&args[i][2], "alignment=", strlen("alignment="))) {
-                    default_alignment_ = parseAlignment(&args[i][strlen("--alignment=")]);
+                } else if (!strncmp(&args[i][2], "attributes=", strlen("attributes="))) {
+                    default_attributes_ = &args[i][strlen("--attributes=")];
                 } else if (!strncmp(&args[i][2], "line_length=", strlen("line_length="))) {
                     default_line_length_ = parseLineLength(&args[i][strlen("--line_length=")]);
                 } else if (!strncmp(&args[i][2], "base=", strlen("base=")))
@@ -163,6 +163,7 @@ int main(int arg_num, const char** args) {
             input->array_name = "ARRAY_NAME_TODO";
         if (input->length_name==NULL)
             input->length_name = "LENGTH_NAME_TODO";
+        // alignment null is fine
     }
 
     bool status = handleFile(params_);
@@ -186,7 +187,7 @@ static void addInputParam(const char* path) {
     // initialize to defaults
     input->aligned = default_aligned_;
     input->base = default_base_;
-    input->alignment = default_aligned_;
+    input->attributes = default_attributes_;
     input->line_length = default_line_length_;
     // these will be initialized later. hmm, this is not a clean way to do it... TODO clean up?
     input->length_name = NULL;
@@ -202,11 +203,6 @@ static uint8_t parseBase(const char* str) {
         return 8U;
     else
         myFatal("invalid base %s", str);
-}
-
-static uint32_t parseAlignment(const char* str) {
-    // TODO
-    myFatal("TODO alignment parsing not implemented yet");
 }
 
 static size_t parseLineLength(const char* str) {

@@ -27,7 +27,7 @@ typedef struct {
     const char* path;
     const char* length_name;
     const char* array_name;
-    uint32_t alignment;
+    const char* attributes;
     size_t line_length;
     uint8_t base;
     bool aligned;
