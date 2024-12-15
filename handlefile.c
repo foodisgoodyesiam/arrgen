@@ -244,7 +244,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
 #ifdef USE_CUSTOM_BASENAME
 const char* customBasename(const char* path) {
     const char* ret = strrchr(path, '/');
-    if (ret==nullptr)
+    if (ret==NULL)
         return path;
     ret++;
     return ret;
