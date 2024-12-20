@@ -72,7 +72,7 @@ static const ArrgenParameter ARGUMENTS[] = {
     {"const", registerMakeConst, true, true},
 };
 
-#define NUM_ARGUMENTS (sizeof(ARGUMENTS)/sizeof(ArrgenParameter))
+#define NUM_PARAMETERS (sizeof(ARGUMENTS)/sizeof(ArrgenParameter))
 
 bool parseParameterLine(const char* arg) {
     const char* equals_pos = strchr(arg, '=');
@@ -87,7 +87,7 @@ bool parseParameterLine(const char* arg) {
     TODO
 #else
     bool defaults_end_reached = params_->num_inputs>0;
-    for (unsigned i=0; i<NUM_ARGUMENTS; i++) {
+    for (unsigned i=0; i<NUM_PARAMETERS; i++) {
         if (!strncmp(arg, ARGUMENTS[i].parameter_name, parameter_name_length)) {
             if (defaults_end_reached) {
                 if (UNLIKELY(!ARGUMENTS[i].valid_global))

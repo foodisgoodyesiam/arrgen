@@ -1,12 +1,13 @@
--make it possible to configure other stuff
+-use gperf
+-write tests
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
--make it parse arguments, including at least --help and --version
 -write help text
--make it possible to specify macro for array length, and name of array
+-clean up the control flow
+-write comments
 -make it willing to read from standard input
 -make it have an option to print the license, that's required by GPL right?
 -optionally write to temporary files first then move
--use the #line thing, IF it's possible for the input file to result in errors in the generated code. But I don't think it will be
+-use the #line thing, IF it's possible for the input file to result in errors in the generated code. But I don't think it will be (it is, but only if you use the same array name more than once)
 -make it accept - to read from standard input
 -add fortran support
 -add assembly support (and check, it might be faster...)

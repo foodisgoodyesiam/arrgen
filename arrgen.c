@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "errors.h"
 #include "handlefile.h"
 #include "writearray.h"
@@ -53,7 +54,6 @@ static const char HELPTEXT[] =
     "-d                  Decimal (shortcut for --base=10)\n"
     "-x                  Hexadecimal (shortcut for --base=16)\n"
     "-8                  Octal (shortcut for --base=8)\n"
-    // TODO replace the below with attributes? so it could also specify memory sections?
     "    --attributes=   In generated header, add attributes (eg __attribute__ ((whatever))) after declarations. Default off. can be used for memory alignment\n"
     "    --line_length=  Max num input bytes to print per line. Default 0 (no limit)\n"
     "    --c_path=       Put the generated .c file at this location. Default " DEFAULT_C_PATH "\n"
@@ -154,7 +154,7 @@ int main(int arg_num, const char** args) {
 
     bool status = handleFile(params_);
     free(params_);
-    return !status;
+    exit(status ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 static void parseParamsFile(const char* path) {
@@ -179,14 +179,15 @@ static void parseParamsFile(const char* path) {
             continue;
         // parse the line
         switch (buf[0]) {
-        case '#': // it's an input file path
+        case '#': // it's a comment line
+            break;
+        case '@': // it's an input file path
             newInputFile(&buf[1]);
             break;
-        case '%':
-            // TODO: make this into a lookup table of function pointers
+        case '%': // it's a parameter
             if (!parseParameterLine(&buf[1]))
                 myFatal("%s: line %u: invalid parameter line %s", path, cur_line, buf);
-        default:
+        default: // it's invalid
             myFatal("%s: %s: currently all non-empty lines must start with %% or #, try --help", path, buf);
         }
     }
