@@ -43,12 +43,12 @@ endif
 prefix ?= /usr/local/bin
 ifeq ($(DEBUG),0)
 	optflags ?= -O3
-	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration
+	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration -fno-exceptions
 	CXXFLAGS ?= $(optflags) -Werror=format
 	CPPFLAGS ?= -DNDEBUG
 else
 	optflags ?= -Og
-	CFLAGS ?= -fsanitize=address,undefined,leak -g
+	CFLAGS ?= -fsanitize=address,undefined,leak -g -fno-exceptions
 	CXXFLAGS ?= -fsanitize=address,undefined,leak -g
 	ifeq ($(DEBUG),2)
 		CPPFLAGS ::= $(CPPFLAGS) -DVERBOSE_DEBUG
@@ -75,6 +75,7 @@ arrgen: arrgen.o \
 	errors.o \
 	handlefile.o \
 	pagesize.o \
+	c_string_stuff.o \
 	writearray.o
 
 install: $(prefix)/arrgen

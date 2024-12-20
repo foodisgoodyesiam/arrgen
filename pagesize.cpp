@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 #include "arrgen.h"
 
 static unsigned constructPagesize();

@@ -31,7 +31,7 @@ typedef struct {
 
 static uint8_t base_;
 static bool aligned_;
-static ByteParams params_[256U];
+static ByteParams params_[UINT8_MAX];
 static char string_bank_[5U*256U*ARRGEN_NUM_REPEATS+1U] ATTR_NONSTRING; // TODO make this number less magic
 
 void initializeLookup(uint8_t base, bool aligned) {
@@ -43,7 +43,7 @@ void initializeLookup(uint8_t base, bool aligned) {
         format = aligned ? "0%.3o," : "0%o,";
         break;
     case 10:
-        format = aligned ? "%u," : "%u,";
+        format = aligned ? "%3u," : "%u,";
         break;
     case 16:
         format = aligned ? "0x%.2X," : "0x%X,";
@@ -54,7 +54,7 @@ void initializeLookup(uint8_t base, bool aligned) {
     base_ = base;
     aligned_ = aligned;
     unsigned cur_pos = 0;
-    for (unsigned c=0U; c<256U; c++) {
+    for (unsigned c=0U; c<UINT8_MAX; c++) {
         params_[c].offset = cur_pos;
         int written_len;
         for (unsigned i = 0U; i<ARRGEN_NUM_REPEATS; i++) {

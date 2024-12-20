@@ -48,7 +48,8 @@ void myErrorErrno(const char* restrict message, ...) {
     int len = vsnprintf(NULL, 0, message, args);
     va_end(args);
     if (LIKELY(len>0)) {
-        char buf[len+1];
+//        char buf[len+1];
+        char *buf = malloc(len+1);
         vsnprintf(buf, len+1, message, args_copy);
         fprintf(stderr, "%s: %s: %s\n", program_name_, buf, strerror(error));
     }
@@ -74,6 +75,7 @@ void myFatalErrno(const char* restrict message, ...) {
     int error = errno;
     va_list args, args_copy;
     va_start(args, message);
+    va_copy(args_copy, args);
     int len = vsnprintf(NULL, 0, message, args);
     va_end(args);
     if (LIKELY(len>=0)) {

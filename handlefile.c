@@ -16,10 +16,11 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "arrgen.h"
 #include <inttypes.h>
 #include <errno.h>
 #include <inttypes.h>
-#include "arrgen.h"
+#include <malloc.h>
 #ifdef ARRGEN_MMAP_SUPPORTED
 #   include <sys/mman.h>
 #   include <sys/stat.h>
@@ -29,6 +30,7 @@
 #include "handlefile.h"
 #include "errors.h"
 #include "writearray.h"
+#include "c_string_stuff.h"
 
 static bool writeH(const OutputFileParams* params, const size_t lengths[])
     ATTR_ACCESS(read_only, 1)
@@ -70,7 +72,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         ret = false;
     } else {
         // TODO: fail gracefully if any fprintf fails
-        const char* include_guard = "TODO_BLOOP_INCLUDED";
+        const char *include_guard = createCName(h_path, strlen(h_path), "_INCLUDED");
         int res;
         res = fprintf(out,
             "#ifndef %s\n"
@@ -93,8 +95,9 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
             // TODO use the line pragma for attributes etc...? maybe unnecessary
             fprintf(out,
                 "// %s\n"
-                "extern const unsigned char %s[%s]",
+                "extern%s unsigned char %s[%s]",
                 params->inputs[i].path,
+                (LIKELY(params->inputs[i].make_const) ? " const" : ""),
                 params->inputs[i].array_name,
                 params->inputs[i].length_name);
             if (params->inputs[i].attributes==NULL)
@@ -118,6 +121,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         if (UNLIKELY(fclose(out)!=0))
             myErrorErrno("%s: could not close", h_path);
         ret = true;
+        free((void*)include_guard); // totally unnecessary but why not
     }
     DLOG("returning %hhu", ret);
     return (ret);
@@ -248,15 +252,5 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
     }
     return (error==0 ? total_length : -1);
 }
-
-#ifdef USE_CUSTOM_BASENAME
-const char* customBasename(const char* path) {
-    const char* ret = strrchr(path, '/');
-    if (ret==NULL)
-        return path;
-    ret++;
-    return ret;
-}
-#endif // USE_CUSTOM_ARRGEN_BASENAME
 
 

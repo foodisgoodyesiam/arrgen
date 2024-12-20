@@ -38,6 +38,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="arrgen.h" />
+		<Unit filename="c_string_stuff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="c_string_stuff.h" />
 		<Unit filename="errors.c">
 			<Option compilerVar="CC" />
 		</Unit>

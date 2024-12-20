@@ -16,37 +16,29 @@
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef HANDLEFILE_H_INCLUDED
-#define HANDLEFILE_H_INCLUDED
+#ifndef C_STRING_STUFF_H_INCLUDED
+#define C_STRING_STUFF_H_INCLUDED
 #include "arrgen.h"
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
-typedef struct {
-    const char* path;
-    const char* length_name;
-    const char* array_name;
-    const char* attributes;
-    uint32_t line_length;
-    uint8_t base;
-    bool aligned;
-    bool make_const;
-} InputFileParams;
-
-typedef struct {
-    const char* c_path;
-    const char* h_name;
-    bool create_header;
-    size_t num_inputs;
-    InputFileParams inputs[];
-} OutputFileParams;
-
-bool handleFile(const OutputFileParams* params)
-    ATTR_ACCESS(read_only, 1)
+const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
+    ATTR_ACCESS(read_only, 1, 2)
+    ATTR_ACCESS(read_only, 3)
+    ATTR_MALLOC
     ATTR_NONNULL;
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-#endif // HANDLEFILE_H_INCLUDED
+uint32_t parseUint32(const char* arg, size_t length)
+    ATTR_ACCESS(read_only, 1, 2)
+    ATTR_NONNULL;
+
+// hmm. clean this up to be more portable (why did I write it this way? glibc should be the special case not the assumed default)
+#if !defined(__GLIBC__) && !defined(__CYGWIN__)
+const char* customBasename(const char* path)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_NONNULL;
+#   define ARRGEN_USE_CUSTOM_BASENAME
+#   define ARRGEN_BASENAME(a) customBasename(a)
+#else
+#   define ARRGEN_BASENAME(a) basename(a)
+#endif
+
+#endif // C_STRING_STUFF_H_INCLUDED

@@ -25,8 +25,9 @@
 #include "errors.h"
 #include "handlefile.h"
 #include "writearray.h"
+#include "c_string_stuff.h"
 
-#define VERSION "0.0.1.next"
+#define VERSION "0.1.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -45,6 +46,8 @@ static const char HELPTEXT[] =
     "-H                  Do not create header file\n"
     "-a                  Vertically align the columns in generated arrays\n"
     "-A                  Do not vertically align (default)\n"
+    "-c                  Make the array const (default)\n"
+    "-C                  Do not make the array const\n"
     "    --base=         Use numerical base (8, 10, or 16) for arrays. Default 10\n"
     "-d                  Decimal (shortcut for --base=10)\n"
     "-x                  Hexadecimal (shortcut for --base=16)\n"
@@ -60,16 +63,23 @@ static const char HELPTEXT[] =
 static OutputFileParams *params_ = NULL;
 static size_t current_params_size_ = sizeof(OutputFileParams) + sizeof(InputFileParams)*1; // current size of the allocated buffer for params
 static const char* params_file_ = NULL;
-static const char* default_attributes_ = NULL;
-static size_t default_line_length_ = 0U;
-static uint8_t default_base_ = 10U;
-static bool default_aligned_ = false; // whether or not to print numbers in fixed-width columns
+
+static InputFileParams defaults_ = {
+    .path = NULL,
+    .length_name = NULL,
+    .array_name = NULL,
+    .attributes = NULL,
+    .line_length = 0U,
+    .base = 10U,
+    .aligned = false, // whether or not to print numbers in fixed-width columns
+    .make_const = true,
+};
 
 const char* program_name_;
 
 static void addInputParam(const char* path);
 static uint8_t parseBase(const char* str);
-static size_t parseLineLength(const char* str);
+static uint32_t parseLineLength(const char* str);
 
 int main(int arg_num, const char** args) {
     DLOG("arrgen_pagesize_ = %u", arrgen_pagesize_);
@@ -96,7 +106,7 @@ int main(int arg_num, const char** args) {
                 else if (!strcmp(&args[i][2], "help")) {
                     fwrite(HELPTEXT, strlen(HELPTEXT), 1, stdout);
                     return 0;
-                } else if (!strcmp(&args[i][2], "help")) {
+                } else if (!strcmp(&args[i][2], "version")) {
                     fprintf(stdout, "arrgen version " VERSION ". Copyright 2024 Steven Marion\n");
                     return 0;
                 } else if (!strncmp(&args[i][2], "c_path=", strlen("c_path="))) {
@@ -108,11 +118,11 @@ int main(int arg_num, const char** args) {
                         myFatal("cannot give h_name more than once");
                     params_->h_name = &args[i][strlen("--h_name=")];
                 } else if (!strncmp(&args[i][2], "attributes=", strlen("attributes="))) {
-                    default_attributes_ = &args[i][strlen("--attributes=")];
+                    defaults_.attributes = &args[i][strlen("--attributes=")];
                 } else if (!strncmp(&args[i][2], "line_length=", strlen("line_length="))) {
-                    default_line_length_ = parseLineLength(&args[i][strlen("--line_length=")]);
+                    defaults_.line_length = parseLineLength(&args[i][strlen("--line_length=")]);
                 } else if (!strncmp(&args[i][2], "base=", strlen("base=")))
-                    default_base_ = parseBase(&args[i][strlen("--base=")]);
+                    defaults_.base = parseBase(&args[i][strlen("--base=")]);
                 else
                     myFatal("unknown long flag %s", args[i]);
             } else
@@ -120,11 +130,13 @@ int main(int arg_num, const char** args) {
                     switch (*c) {
                     case 'h': params_->create_header = true; continue;
                     case 'H': params_->create_header = false; continue;
-                    case 'a': default_aligned_ = true; continue;
-                    case 'A': default_aligned_ = false; continue;
-                    case 'd': default_base_ = 10U; continue;
-                    case 'x': default_base_ = 16U; continue;
-                    case '8': default_base_ = 8U; continue;
+                    case 'a': defaults_.aligned = true; continue;
+                    case 'A': defaults_.aligned = false; continue;
+                    case 'c': defaults_.make_const = true; continue;
+                    case 'C': defaults_.make_const = false; continue;
+                    case 'd': defaults_.base = 10U; continue;
+                    case 'x': defaults_.base = 16U; continue;
+                    case '8': defaults_.base = 8U; continue;
                     case 'f':
                         if (params_file_ != NULL)
                             myFatal("you can only give one file if using -f");
@@ -158,11 +170,11 @@ int main(int arg_num, const char** args) {
 
     for (size_t i=0; i<params_->num_inputs; i++) {
         InputFileParams *input = &params_->inputs[i];
-        // TODO around here: go through params and set the remaining NULLs to defaults. figure out how to track which ones are malloc'd? Or maybe I just don't bother to free them
+        // TODO figure out how to track which ones are malloc'd? Or maybe I just don't bother to free them
         if (input->array_name==NULL)
-            input->array_name = "ARRAY_NAME_TODO";
+            input->array_name = createCName(input->path, strlen(input->path), "");
         if (input->length_name==NULL)
-            input->length_name = "LENGTH_NAME_TODO";
+            input->length_name = createCName(input->path, strlen(input->path), "_LENGTH");
         // alignment null is fine
     }
 
@@ -183,15 +195,9 @@ static void addInputParam(const char* path) {
         current_params_size_ = new_size;
     }
     InputFileParams *input = &params_->inputs[params_->num_inputs-1];
-    input->path = path;
     // initialize to defaults
-    input->aligned = default_aligned_;
-    input->base = default_base_;
-    input->attributes = default_attributes_;
-    input->line_length = default_line_length_;
-    // these will be initialized later. hmm, this is not a clean way to do it... TODO clean up?
-    input->length_name = NULL;
-    input->array_name = NULL;
+    *input = defaults_;
+    input->path = path;
 }
 
 static uint8_t parseBase(const char* str) {
@@ -205,8 +211,8 @@ static uint8_t parseBase(const char* str) {
         myFatal("invalid base %s", str);
 }
 
-static size_t parseLineLength(const char* str) {
-    // TODO
-    myFatal("TODO line length parsing not implemented yet");
+// TODO investigate code size if I make line length a uint16_t
+static uint32_t parseLineLength(const char* str) {
+    return parseUint32(str, strlen(str));
 }
 
