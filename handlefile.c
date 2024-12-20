@@ -20,7 +20,7 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <malloc.h>
+#include <stdlib.h>
 #ifdef ARRGEN_MMAP_SUPPORTED
 #   include <sys/mman.h>
 #   include <sys/stat.h>

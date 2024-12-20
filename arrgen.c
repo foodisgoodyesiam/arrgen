@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "errors.h"
 #include "handlefile.h"

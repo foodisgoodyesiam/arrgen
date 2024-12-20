@@ -19,7 +19,7 @@
 #include "arrgen.h"
 #include "c_string_stuff.h"
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <inttypes.h>
 #include "errors.h"
 
