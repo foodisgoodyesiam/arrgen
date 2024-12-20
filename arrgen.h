@@ -98,10 +98,27 @@
 #else
 #   define ATTR_MALLOC
 #endif
+#if __has_attribute(unused)
+#   define ATTR_UNUSED __attribute__ ((unused))
+#else
+#   define ATTR_UNUSED
+#endif
+#if __has_attribute(returns_nonnull)
+#   define ATTR_RETURNS_NONNULL __attribute__ ((returns_nonnull))
+#else
+#   define ATTR_RETURNS_NONNULL
+#endif
 #if __has_attribute(const)
 #   define ATTR_CONST __attribute__ ((const))
 #else
 #   define ATTR_CONST
+#endif
+#if __STDC_VERSION__ >= 202311L
+#   define ATTR_NODISCARD [[nodiscard]]
+#elif __has_attribute(warn_unused_result)
+#   define ATTR_NODISCARD __attribute__ ((warn_unused_result))
+#else
+#   define ATTR_NODISCARD
 #endif
 #ifdef ARRGEN_H_TEMP_HAS_ATTRIBUTE
 #   undef __has_attribute // to not mess up headers included after this

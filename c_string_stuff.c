@@ -59,6 +59,19 @@ const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, con
     return ret;
 }
 
+char* duplicateString(const char* str) {
+    return duplicateStringLen(str, strlen(str));
+}
+
+char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length) {
+    char* ret = malloc(length+1);
+    if (UNLIKELY(ret==NULL))
+        myFatal("could not allocate %zu bytes", length+1);
+    memcpy(ret, str, length);
+    ret[length] = '\0';
+    return ret;
+}
+
 #ifdef ARRGEN_USE_CUSTOM_BASENAME
 const char* customBasename(const char* path) {
     const char* ret = strrchr(path, '/');
@@ -114,6 +127,15 @@ uint32_t parseUint32(const char* arg, size_t length) {
 #endif // USE_FANCY_INT_PARSING
     DLOG("parsed %s as %" PRIu32 " with base %" PRIu8, arg, ret, base);
     return ret;
+}
+
+bool parseBool(const char *potential_bool, const char *param_name) {
+    if (!strcmp(potential_bool, "yes") || !strcmp(potential_bool, "true"))
+        return true;
+    else if (!strcmp(potential_bool, "no") || !strcmp(potential_bool, "false"))
+        return false;
+    else
+        myFatal("%s must be yes or no, not %s", param_name, potential_bool);
 }
 // TODO: does msvc have equivalents to the builtins?
 

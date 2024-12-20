@@ -24,10 +24,31 @@ const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, con
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_ACCESS(read_only, 3)
     ATTR_MALLOC
+    ATTR_RETURNS_NONNULL
+    ATTR_NODISCARD
+    ATTR_NONNULL;
+
+// TODO: figure out if there's a convenient way to not need this
+char* duplicateString(const char* str)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_MALLOC
+    ATTR_RETURNS_NONNULL
+    ATTR_NODISCARD
+    ATTR_NONNULL;
+
+char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length)
+    ATTR_ACCESS(read_only, 1, 2)
+    ATTR_MALLOC
+    ATTR_RETURNS_NONNULL
     ATTR_NONNULL;
 
 uint32_t parseUint32(const char* arg, size_t length)
     ATTR_ACCESS(read_only, 1, 2)
+    ATTR_NONNULL;
+
+bool parseBool(const char *potential_bool, const char *param_name)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_ACCESS(read_only, 2)
     ATTR_NONNULL;
 
 // hmm. clean this up to be more portable (why did I write it this way? glibc should be the special case not the assumed default)

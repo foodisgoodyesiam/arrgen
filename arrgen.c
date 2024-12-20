@@ -26,6 +26,7 @@
 #include "handlefile.h"
 #include "writearray.h"
 #include "c_string_stuff.h"
+#include "parameters.h"
 
 #define VERSION "0.1.0.next"
 
@@ -58,28 +59,13 @@ static const char HELPTEXT[] =
     "    --c_path=       Put the generated .c file at this location. Default " DEFAULT_C_PATH "\n"
     "    --h_name=       Put the generated (or referenced) header file at this location relative to the .c file. Default " DEFAULT_H_NAME "\n"
     "TODO describe defaults and input file format\n"
+    "TODO update this help text to match latest updates\n"
     ;
 
-static OutputFileParams *params_ = NULL;
-static size_t current_params_size_ = sizeof(OutputFileParams) + sizeof(InputFileParams)*1; // current size of the allocated buffer for params
-static const char* params_file_ = NULL;
-
-static InputFileParams defaults_ = {
-    .path = NULL,
-    .length_name = NULL,
-    .array_name = NULL,
-    .attributes = NULL,
-    .line_length = 0U,
-    .base = 10U,
-    .aligned = false, // whether or not to print numbers in fixed-width columns
-    .make_const = true,
-};
+static void parseParamsFile(const char* path)
+    ATTR_NONNULL;
 
 const char* program_name_;
-
-static void addInputParam(const char* path);
-static uint8_t parseBase(const char* str);
-static uint32_t parseLineLength(const char* str);
 
 int main(int arg_num, const char** args) {
     DLOG("arrgen_pagesize_ = %u", arrgen_pagesize_);
@@ -88,11 +74,12 @@ int main(int arg_num, const char** args) {
 
     params_ = malloc(current_params_size_);
     if (UNLIKELY(params_==NULL))
-        myFatalErrno("failed to allocate memory");
+        myFatalErrno("failed to allocate %zu bytes", current_params_size_);
     params_->c_path = NULL;
     params_->h_name = NULL;
     params_->create_header = true;
     params_->num_inputs = 0;
+    const char* params_file = NULL;
 
     bool flags_end_found = false;
     bool skip_second_arg = false;
@@ -100,8 +87,10 @@ int main(int arg_num, const char** args) {
         skip_second_arg = false;
         if (!flags_end_found && LIKELY(args[i][0]=='-')) {
             if (args[i][1]=='-') {
-                // TODO: use a lookup table here to reduce the duplication and code size
-                if (args[i][2]=='\0')
+                // the lookup table probably increases size by a lot, but it should be more maintainable
+                if (parseParameterLine(&args[i][2])) {
+                    // bloop
+                } else if (args[i][2]=='\0')
                     flags_end_found = true;
                 else if (!strcmp(&args[i][2], "help")) {
                     fwrite(HELPTEXT, strlen(HELPTEXT), 1, stdout);
@@ -109,21 +98,7 @@ int main(int arg_num, const char** args) {
                 } else if (!strcmp(&args[i][2], "version")) {
                     fprintf(stdout, "arrgen version " VERSION ". Copyright 2024 Steven Marion\n");
                     return 0;
-                } else if (!strncmp(&args[i][2], "c_path=", strlen("c_path="))) {
-                    if (UNLIKELY(params_->c_path != NULL))
-                        myFatal("cannot give c_path more than once");
-                    params_->c_path = &args[i][strlen("--c_path=")];
-                } else if (!strncmp(&args[i][2], "h_name=", strlen("h_name="))) {
-                    if (UNLIKELY(params_->h_name != NULL))
-                        myFatal("cannot give h_name more than once");
-                    params_->h_name = &args[i][strlen("--h_name=")];
-                } else if (!strncmp(&args[i][2], "attributes=", strlen("attributes="))) {
-                    defaults_.attributes = &args[i][strlen("--attributes=")];
-                } else if (!strncmp(&args[i][2], "line_length=", strlen("line_length="))) {
-                    defaults_.line_length = parseLineLength(&args[i][strlen("--line_length=")]);
-                } else if (!strncmp(&args[i][2], "base=", strlen("base=")))
-                    defaults_.base = parseBase(&args[i][strlen("--base=")]);
-                else
+                } else
                     myFatal("unknown long flag %s", args[i]);
             } else
                 for (const char* c=&args[i][1]; *c!='\0'; c++)
@@ -138,28 +113,27 @@ int main(int arg_num, const char** args) {
                     case 'x': defaults_.base = 16U; continue;
                     case '8': defaults_.base = 8U; continue;
                     case 'f':
-                        if (params_file_ != NULL)
+                        if (params_file != NULL)
                             myFatal("you can only give one file if using -f");
                         else if (i+1 == arg_num)
                             myFatal("you passed -f but did not give a file");
-                        params_file_ = args[i+1];
+                        params_file = args[i+1];
                         skip_second_arg = true;
                         break;
                     default:
                         myFatal("unknown short flag %c", *c);
                     }
         } else // parse as input file
-            addInputParam(args[i]);
+            newInputFile(args[i]);
     }
 
-    if (params_file_==NULL) {
+    if (params_file==NULL) {
         if (UNLIKELY(params_->num_inputs == 0))
             myFatal("you forgot to give me any files");
     } else {
         if (UNLIKELY(params_->num_inputs >= 0))
-            myFatal("%s: cannot give other files on command line if passing settings file %s", params_->inputs[0].path, params_file_);
-        // TODO
-        myFatal("TODO: settings file parsing not implemented yet");
+            myFatal("%s: cannot give other files on command line if passing settings file %s", params_->inputs[0].path, params_file);
+        parseParamsFile(params_file);
     }
 
     // these current defaults make it not usable yet
@@ -183,36 +157,46 @@ int main(int arg_num, const char** args) {
     return !status;
 }
 
-static void addInputParam(const char* path) {
-    params_->num_inputs++;
-    size_t new_needed_size = sizeof(OutputFileParams) + sizeof(InputFileParams)*(params_->num_inputs);
-    if (new_needed_size > current_params_size_) {
-        size_t new_size = sizeof(OutputFileParams) + sizeof(InputFileParams)*(params_->num_inputs*2);
-        DLOG("reallocating params_ %p from size %zu (%zu elements) to %zu (%zu elements)", params_, current_params_size_, params_->num_inputs-1, new_size, params_->num_inputs*2);
-        params_ = (OutputFileParams*)realloc(params_, new_size);
-        if (UNLIKELY(params_==NULL))
-            myFatalErrno("could not allocate memory");
-        current_params_size_ = new_size;
+static void parseParamsFile(const char* path) {
+    FILE* in = fopen(path, "rt");
+    if (UNLIKELY(in==NULL))
+        myFatalErrno("%s", path);
+    size_t buf_size = PATH_MAX;
+    char *buf = malloc(buf_size);
+    if (UNLIKELY(buf==NULL))
+        myFatalErrno("failed to allocate %zu bytes", buf_size);
+    ssize_t num_read;
+    unsigned cur_line = 0;
+    while (LIKELY((num_read = getline(&buf, &buf_size, in)) > 0)) {
+        cur_line++;
+        // remve the trailing newline if it's there
+        if (buf[num_read-1]=='\n') {
+            num_read--;
+            buf[num_read] = '\0';
+        }
+        // skip empty lines
+        if (UNLIKELY(num_read==0))
+            continue;
+        // parse the line
+        switch (buf[0]) {
+        case '#': // it's an input file path
+            newInputFile(&buf[1]);
+            break;
+        case '%':
+            // TODO: make this into a lookup table of function pointers
+            if (!parseParameterLine(&buf[1]))
+                myFatal("%s: line %u: invalid parameter line %s", path, cur_line, buf);
+        default:
+            myFatal("%s: %s: currently all non-empty lines must start with %% or #, try --help", path, buf);
+        }
     }
-    InputFileParams *input = &params_->inputs[params_->num_inputs-1];
-    // initialize to defaults
-    *input = defaults_;
-    input->path = path;
-}
+    int error = errno;
+    if (!LIKELY(feof(in))) {
+        errno = error;
+        myFatalErrno("%s", path);
+    }
 
-static uint8_t parseBase(const char* str) {
-    if (!strcmp(str, "16"))
-        return 16U;
-    else if (!strcmp(str, "10"))
-        return 10U;
-    else if (!strcmp(str, "8"))
-        return 8U;
-    else
-        myFatal("invalid base %s", str);
-}
-
-// TODO investigate code size if I make line length a uint16_t
-static uint32_t parseLineLength(const char* str) {
-    return parseUint32(str, strlen(str));
+    // TODO: free stuff, but only if DEBUG is defined
+    free(buf);
 }
 

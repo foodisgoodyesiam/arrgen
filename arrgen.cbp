@@ -51,6 +51,10 @@
 		</Unit>
 		<Unit filename="handlefile.h" />
 		<Unit filename="pagesize.cpp" />
+		<Unit filename="parameters.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="parameters.h" />
 		<Unit filename="writearray.c">
 			<Option compilerVar="CC" />
 		</Unit>

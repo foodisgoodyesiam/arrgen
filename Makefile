@@ -76,6 +76,7 @@ arrgen: arrgen.o \
 	handlefile.o \
 	pagesize.o \
 	c_string_stuff.o \
+	parameters.o \
 	writearray.o
 
 install: $(prefix)/arrgen
