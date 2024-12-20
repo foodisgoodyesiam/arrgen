@@ -35,25 +35,25 @@ void newInputFile(const char* path)
 bool parseParameterLine(const char* arg)
     ATTR_NONNULL;
 
-void parseCPath(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;
-void parseHPath(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerHPath(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;
-void parseCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;
-void parseLengthName(const char* str, InputFileParams* params)
+void registerLengthName(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseArrayName(const char* str, InputFileParams* params)
+void registerArrayName(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseAttributes(const char* str, InputFileParams* params)
+void registerAttributes(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseLineLength(const char* str, InputFileParams* params)
+void registerLineLength(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseBase(const char* str, InputFileParams* params)
+void registerBase(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseAligned(const char* str, InputFileParams* params)
+void registerAligned(const char* str, InputFileParams* params)
     ATTR_NONNULL;
-void parseMakeConst(const char* str, InputFileParams* params)
+void registerMakeConst(const char* str, InputFileParams* params)
     ATTR_NONNULL;
 
 #ifdef __cplusplus

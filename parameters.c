@@ -60,16 +60,16 @@ typedef struct {
 } ArrgenParameter;
 
 static const ArrgenParameter ARGUMENTS[] = {
-    {"c_path", parseCPath, true, false},
-    {"h_path", parseHPath, true, false},
-    {"create_header", parseCreateHeader, true, false},
-    {"array_name", parseArrayName, false, true},
-    {"length_name", parseLengthName, false, true},
-    {"attributes", parseAttributes, true, true},
-    {"line_length", parseLineLength, true, true},
-    {"base", parseBase, true, true},
-    {"aligned", parseAligned, true, true},
-    {"const", parseMakeConst, true, true},
+    {"c_path", registerCPath, true, false},
+    {"h_path", registerHPath, true, false},
+    {"create_header", registerCreateHeader, true, false},
+    {"array_name", registerArrayName, false, true},
+    {"length_name", registerLengthName, false, true},
+    {"attributes", registerAttributes, true, true},
+    {"line_length", registerLineLength, true, true},
+    {"base", registerBase, true, true},
+    {"aligned", registerAligned, true, true},
+    {"const", registerMakeConst, true, true},
 };
 
 #define NUM_ARGUMENTS (sizeof(ARGUMENTS)/sizeof(ArrgenParameter))
@@ -102,39 +102,39 @@ bool parseParameterLine(const char* arg) {
 #endif
 }
 
-void parseCPath(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED) {
     if (UNLIKELY(params_->c_path!=NULL))
         myFatal("cannot give c_path more than once");
     params_->c_path = duplicateString(str);
 }
 
-void parseHPath(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerHPath(const char* str, InputFileParams* params ATTR_UNUSED) {
     if (UNLIKELY(params_->h_name!=NULL))
         myFatal("cannot give h_name more than once");
     params_->h_name = duplicateString(str);
 }
 
-void parseCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED) {
     params_->create_header = parseBool(str, "create_header");
 }
 
-void parseLengthName(const char* str, InputFileParams* params) {
+void registerLengthName(const char* str, InputFileParams* params) {
     params->length_name = duplicateString(str);
 }
 
-void parseArrayName(const char* str, InputFileParams* params) {
+void registerArrayName(const char* str, InputFileParams* params) {
     params->array_name = duplicateString(str);
 }
 
-void parseAttributes(const char* str, InputFileParams* params) {
+void registerAttributes(const char* str, InputFileParams* params) {
     params->attributes = duplicateString(str);
 }
 
-void parseLineLength(const char* str, InputFileParams* params) {
+void registerLineLength(const char* str, InputFileParams* params) {
     params->line_length = parseUint32(str, strlen(str));
 }
 
-void parseBase(const char* str, InputFileParams* params) {
+void registerBase(const char* str, InputFileParams* params) {
     if (!strcmp(str, "16"))
         params->base = 16U;
     else if (!strcmp(str, "10"))
@@ -145,11 +145,11 @@ void parseBase(const char* str, InputFileParams* params) {
         myFatal("invalid base %s", str);
 }
 
-void parseAligned(const char* str, InputFileParams* params) {
+void registerAligned(const char* str, InputFileParams* params) {
     params->aligned = parseBool(str, "aligned");
 }
 
-void parseMakeConst(const char* str, InputFileParams* params) {
+void registerMakeConst(const char* str, InputFileParams* params) {
     params->make_const = parseBool(str, "const");
 }
 
