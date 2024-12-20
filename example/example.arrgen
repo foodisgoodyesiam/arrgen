@@ -1,8 +1,26 @@
-#this is an example file
+# Copyright © 2024 Steven Marion <steven@dragons.fish>
+#
+# This file is part of arrgen.
+#
+# arrgen is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# arrgen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
+
+# this is an example file which makes a useless program to demonstrate how to use arrgen
+
 %c_path=gen_arrays_test.c
 %create_header=true
 %line_length=20
-@temp.c
+@small_image.png
 @../arrgen.c
 %attributes=__attribute__((aligned(32)))
 %array_name=MY_ARRAY_NAME
