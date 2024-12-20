@@ -23,7 +23,7 @@
 #include <inttypes.h>
 #include "errors.h"
 
-#if 0
+#if defined(__GNUC__) || defined(__clang__)
 #   define USE_FANCY_INT_PARSING
 static uint8_t parseDigit(char c, uint8_t base)
     ATTR_CONST;
@@ -87,8 +87,6 @@ uint32_t parseUint32(const char* arg, size_t length) {
     uint32_t ret = 0;
     uint8_t base = 10;
     const char* c = arg;
-    if (UNLIKELY(length==0))
-        myFatal("empty string is not an integer");
     // check if it's not base 10
     if (UNLIKELY(length>2 && arg[0] == '0' && arg[1] >= 'a' && arg[1] <= 'z')) {
         base = parseBase(arg[1]);
@@ -96,6 +94,9 @@ uint32_t parseUint32(const char* arg, size_t length) {
             myFatal("unrecognized base prefix 0%c", arg[1]);
         c+=2;
     }
+    // TODO: consider if I want to intead make it treat empty strings as zero. probably not
+    if (UNLIKELY(c==&arg[length]))
+        myFatal("empty string is not an integer");
 #ifdef USE_FANCY_INT_PARSING
     for (; c!=&arg[length]; c++) {
         uint8_t to_add = parseDigit(*c, base); //this is probably not very optimized for code size
