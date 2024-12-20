@@ -65,6 +65,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
     else
         spot_to_insert_header_name++;
     strcpy(spot_to_insert_header_name, params->h_name);
+    DLOG("c_path: %s, h_name: %s, resulting h_path: %s", params->c_path, params->h_name, h_path);
     FILE *out = fopen(h_path, "wb");
     bool ret;
     if (UNLIKELY(out==NULL)) {

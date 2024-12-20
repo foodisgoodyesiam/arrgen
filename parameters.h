@@ -37,7 +37,7 @@ bool parseParameterLine(const char* arg)
 
 void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;
-void registerHPath(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerHName(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;
 void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED)
     ATTR_NONNULL;

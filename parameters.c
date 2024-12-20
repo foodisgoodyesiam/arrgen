@@ -61,7 +61,7 @@ typedef struct {
 
 static const ArrgenParameter ARGUMENTS[] = {
     {"c_path", registerCPath, true, false},
-    {"h_path", registerHPath, true, false},
+    {"h_name", registerHName, true, false},
     {"create_header", registerCreateHeader, true, false},
     {"array_name", registerArrayName, false, true},
     {"length_name", registerLengthName, false, true},
@@ -108,7 +108,7 @@ void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED) {
     params_->c_path = duplicateString(str);
 }
 
-void registerHPath(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerHName(const char* str, InputFileParams* params ATTR_UNUSED) {
     if (UNLIKELY(params_->h_name!=NULL))
         myFatal("cannot give h_name more than once");
     params_->h_name = duplicateString(str);
