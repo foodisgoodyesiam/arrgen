@@ -49,7 +49,7 @@ void newInputFile(const char* path) {
     InputFileParams *input = &params_->inputs[params_->num_inputs-1];
     // initialize to defaults
     *input = defaults_;
-    input->path = path;
+    input->path = duplicateString(path);
 }
 
 typedef struct {
@@ -86,14 +86,14 @@ bool parseParameterLine(const char* arg) {
     parameter_name[parameter_name_length] = '\0';
     TODO
 #else
-    bool defaults_end_reached = params_->num_inputs>0;
+    bool defaults_end_reached = params_->num_inputs > 0;
     for (unsigned i=0; i<NUM_PARAMETERS; i++) {
         if (!strncmp(arg, ARGUMENTS[i].parameter_name, parameter_name_length)) {
             if (defaults_end_reached) {
-                if (UNLIKELY(!ARGUMENTS[i].valid_global))
-                    myFatal("%s: parameter must follow a specific input file", ARGUMENTS[i].parameter_name);
-            } else if (UNLIKELY(!ARGUMENTS[i].valid_individual))
+                if (UNLIKELY(!ARGUMENTS[i].valid_individual))
                 myFatal("%s: global-only parameters must precede parameters specific to input files", ARGUMENTS[i].parameter_name);
+            } else if (UNLIKELY(!ARGUMENTS[i].valid_global))
+                myFatal("%s: parameter must follow a specific input file", ARGUMENTS[i].parameter_name);
             ARGUMENTS[i].handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_);
             return true;
         }

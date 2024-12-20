@@ -1,0 +1,17 @@
+#this is an example file
+%c_path=gen_arrays_test.c
+%create_header=true
+%line_length=20
+@temp.c
+@../arrgen.c
+%attributes=__attribute__((aligned(32)))
+%array_name=MY_ARRAY_NAME
+%length_name=MY_ARRAY_NAME_LENGTH_GWAHAHA
+%base=16
+%aligned=yes
+
+@../arrgen.c
+%attributes=
+%base=10
+%aligned=false
+%line_length=0

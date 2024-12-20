@@ -119,7 +119,7 @@ int main(int arg_num, const char** args) {
                             myFatal("you passed -f but did not give a file");
                         params_file = args[i+1];
                         skip_second_arg = true;
-                        break;
+                        continue;
                     default:
                         myFatal("unknown short flag %c", *c);
                     }
@@ -131,7 +131,7 @@ int main(int arg_num, const char** args) {
         if (UNLIKELY(params_->num_inputs == 0))
             myFatal("you forgot to give me any files");
     } else {
-        if (UNLIKELY(params_->num_inputs >= 0))
+        if (UNLIKELY(params_->num_inputs > 0))
             myFatal("%s: cannot give other files on command line if passing settings file %s", params_->inputs[0].path, params_file);
         parseParamsFile(params_file);
     }
@@ -187,6 +187,7 @@ static void parseParamsFile(const char* path) {
         case '%': // it's a parameter
             if (!parseParameterLine(&buf[1]))
                 myFatal("%s: line %u: invalid parameter line %s", path, cur_line, buf);
+            break;
         default: // it's invalid
             myFatal("%s: %s: currently all non-empty lines must start with %% or #, try --help", path, buf);
         }
