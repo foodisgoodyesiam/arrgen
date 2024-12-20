@@ -79,7 +79,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
             "#ifndef %s\n"
             "#define %s\n"
             "#ifdef __cplusplus\n"
-            "#extern \"C\" {\n"
+            "extern \"C\" {\n"
             "#endif // __cplusplus\n"
             "\n",
             include_guard,
