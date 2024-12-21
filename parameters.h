@@ -35,6 +35,7 @@ typedef struct ArrgenParameter {
 
 #ifdef __cplusplus
 extern "C" {
+#define register
 #endif // __cplusplus
 
 // TODO: is this usage of read_only actually right, for strings where the null terminator is one past the length indicated by len?>
@@ -76,5 +77,6 @@ void registerMakeConst(const char* str, InputFileParams* params)
 
 #ifdef __cplusplus
 }
+#undef register
 #endif // __cplusplus
 #endif // PARAMETERS_H_INCLUDED
