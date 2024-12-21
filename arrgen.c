@@ -166,9 +166,17 @@ static void parseParamsFile(const char* path) {
         myFatalErrno("failed to allocate %zu bytes", buf_size);
     ssize_t num_read;
     unsigned cur_line = 0;
+#ifdef ARRGEN_GETLINE_SUPPORTED
+    // TODO find a cleaner way to write this ifdef
     while (LIKELY((num_read = getline(&buf, &buf_size, in)) > 0)) {
+#else
+    while (LIKELY(fgets(buf, PATH_MAX, in)!=NULL)) {
+        num_read = strlen(buf);
+        if (UNLIKELY(num_read>=(PATH_MAX-1)))
+            myFatal("%s: lines too long (system does not have GNU getline)", path);
+#endif
         cur_line++;
-        // remve the trailing newline if it's there
+        // remove the trailing newline if it's there
         if (buf[num_read-1]=='\n') {
             num_read--;
             buf[num_read] = '\0';

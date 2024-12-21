@@ -1,4 +1,4 @@
-/* Copyright Â© 2024 Steven Marion <steven@dragons.fish>
+/* Copyright © 2024 Steven Marion <steven@dragons.fish>
  *
  * This file is part of arrgen.
  *
@@ -130,6 +130,13 @@
 #else
 #   define LIKELY(a) (a)
 #   define UNLIKELY(a) (a)
+#endif
+
+// TODO: figure out a better feature test method. Maybe this is an opportunity to learn autotools? Could also use gnulib to get their implementation of getline.
+#if defined(__APPLE__) || defined(__linux__) || defined(__CYGWIN__)
+#   define ARRGEN_GETLINE_SUPPORTED
+#else
+#   warning "This system doesn't support GNU getline. TODO find a better solution here"
 #endif
 
 #ifdef VERBOSE_DEBUG
