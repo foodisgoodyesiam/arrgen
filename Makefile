@@ -69,7 +69,7 @@ endif
 
 all: arrgen
 clean:
-	rm -rf arrgen *.o *.d
+	rm -rf arrgen *.o *.d gen_*.c
 
 arrgen: arrgen.o \
 	errors.o \
