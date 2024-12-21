@@ -14,6 +14,9 @@
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
+				<ExtraCommands>
+					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+				</ExtraCommands>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/arrgen" prefix_auto="1" extension_auto="1" />
@@ -26,6 +29,9 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+				</ExtraCommands>
 			</Target>
 			<Target title="Example">
 				<Option output="bin/Release/example" prefix_auto="1" extension_auto="1" />
@@ -83,6 +89,11 @@
 			<Option compilerVar="CC" />
 			<Option target="Example" />
 		</Unit>
+		<Unit filename="gen_parameter_lookup.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
 		<Unit filename="handlefile.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
@@ -93,6 +104,10 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="pagesize.cpp">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="parameter_lookup.gperf">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>

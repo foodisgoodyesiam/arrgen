@@ -1,0 +1,24 @@
+struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*); const bool valid_global; const bool valid_individual;};
+%{
+#include "arrgen.h"
+#include "parameters.h"
+%}
+%struct-type
+%language=ANSI-C
+%readonly-tables
+%global-table
+%omit-struct-type
+%pic
+%define slot-name name_offset
+%define lookup-function-name identifyParameter
+%%
+"c_path", registerCPath, true, false
+"h_name", registerHName, true, false
+"create_header", registerCreateHeader, true, false
+"array_name", registerArrayName, false, true
+"length_name", registerLengthName, false, true
+"attributes", registerAttributes, true, true
+"line_length", registerLineLength, true, true
+"base", registerBase, true, true
+"aligned", registerAligned, true, true
+"const", registerMakeConst, true, true

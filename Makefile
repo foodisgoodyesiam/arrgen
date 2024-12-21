@@ -77,11 +77,15 @@ arrgen: arrgen.o \
 	pagesize.o \
 	c_string_stuff.o \
 	parameters.o \
+	gen_parameter_lookup.o \
 	writearray.o
 
 install: $(prefix)/arrgen
 
 $(prefix)/arrgen: arrgen
 	install -m 755 $< $@
+
+gen_parameter_lookup.c: parameter_lookup.gperf
+	gperf -m 100 $< >$@
 
 -include $(wildcard *.d)

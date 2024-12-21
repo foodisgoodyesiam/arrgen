@@ -20,9 +20,27 @@
 #define PARAMETERS_H_INCLUDED
 #include "arrgen.h"
 #include "handlefile.h"
+#define USE_GPERF
+
+typedef struct ArrgenParameter {
+#ifdef USE_GPERF
+    int name_offset;
+#else
+    const char *parameter_name;
+#endif
+    void (*const handler)(const char*, InputFileParams*);
+    const bool valid_global;
+    const bool valid_individual;
+} ArrgenParameter;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
+// TODO: is this usage of read_only actually right, for strings where the null terminator is one past the length indicated by len?>
+const struct ArrgenParameter* identifyParameter(register const char *str, register size_t len)
+    ATTR_ACCESS(read_only, 1, 2)
+    ATTR_NONNULL;
 
 // TODO find a cleaner solution that doesn't give current_params_size_ external linkage.
 // there's a lot of fan-out between parameters.c and parameters.h... can I clean this up? do I need to?

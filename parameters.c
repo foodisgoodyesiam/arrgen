@@ -52,54 +52,26 @@ void newInputFile(const char* path) {
     input->path = duplicateString(path);
 }
 
-typedef struct {
-    const char* const parameter_name;
-    void (*const handler)(const char*, InputFileParams*);
-    const bool valid_global;
-    const bool valid_individual;
-} ArrgenParameter;
-
-static const ArrgenParameter ARGUMENTS[] = {
-    {"c_path", registerCPath, true, false},
-    {"h_name", registerHName, true, false},
-    {"create_header", registerCreateHeader, true, false},
-    {"array_name", registerArrayName, false, true},
-    {"length_name", registerLengthName, false, true},
-    {"attributes", registerAttributes, true, true},
-    {"line_length", registerLineLength, true, true},
-    {"base", registerBase, true, true},
-    {"aligned", registerAligned, true, true},
-    {"const", registerMakeConst, true, true},
-};
-
-#define NUM_PARAMETERS (sizeof(ARGUMENTS)/sizeof(ArrgenParameter))
-
 bool parseParameterLine(const char* arg) {
     const char* equals_pos = strchr(arg, '=');
     if (UNLIKELY(equals_pos==NULL))
         return false;
     size_t parameter_name_length = equals_pos-arg;
-    // TODO: use gperf, why not
-#if 0
+    bool defaults_end_reached = params_->num_inputs > 0;
     char parameter_name[parameter_name_length+1];
     memcpy(parameter_name, arg, parameter_name_length);
     parameter_name[parameter_name_length] = '\0';
-    TODO
-#else
-    bool defaults_end_reached = params_->num_inputs > 0;
-    for (unsigned i=0; i<NUM_PARAMETERS; i++) {
-        if (!strncmp(arg, ARGUMENTS[i].parameter_name, parameter_name_length)) {
-            if (defaults_end_reached) {
-                if (UNLIKELY(!ARGUMENTS[i].valid_individual))
-                myFatal("%s: global-only parameters must precede parameters specific to input files", ARGUMENTS[i].parameter_name);
-            } else if (UNLIKELY(!ARGUMENTS[i].valid_global))
-                myFatal("%s: parameter must follow a specific input file", ARGUMENTS[i].parameter_name);
-            ARGUMENTS[i].handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_);
-            return true;
-        }
+    const ArrgenParameter *parameter = identifyParameter(parameter_name, parameter_name_length);
+    if (LIKELY(parameter!=NULL)) {
+        if (defaults_end_reached) {
+            if (UNLIKELY(!parameter->valid_individual))
+            myFatal("%s: global-only parameters must precede parameters specific to input files", parameter_name);
+        } else if (UNLIKELY(!parameter->valid_global))
+            myFatal("%s: parameter must follow a specific input file", parameter_name);
+        parameter->handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_);
+        return true;
     }
     return false;
-#endif
 }
 
 void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED) {
