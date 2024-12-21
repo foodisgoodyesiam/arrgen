@@ -28,7 +28,7 @@
 #include "c_string_stuff.h"
 #include "parameters.h"
 
-#define VERSION "0.1.0.next"
+#define VERSION "0.2.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
