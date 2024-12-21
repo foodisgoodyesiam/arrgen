@@ -18,6 +18,16 @@
 
 #ifndef ARRGEN_H_INCLUDED
 #define ARRGEN_H_INCLUDED
+// TODO: figure out a better feature test method. Maybe this is an opportunity to learn autotools? Could also use gnulib to get their implementation of getline.
+#if defined(__APPLE__) || defined(__linux__) || defined(__CYGWIN__)
+#   define ARRGEN_GETLINE_SUPPORTED
+#elif defined(__STDC_ALLOC_LIB__)
+#   define ARRGEN_GETLINE_SUPPORTED
+#   define __STDC_WANT_LIB_EXT2__ 1
+#else
+#   warning "This system doesn't support GNU getline. TODO find a better solution here"
+#endif
+
 #ifndef _GNU_SOURCE // to silence annoying warnings because g++ predefines this and gcc doesn't
 #   define _GNU_SOURCE
 #endif
@@ -30,7 +40,6 @@
 #   define PATH_MAX 1000 //should be 260 but whatever
 #elif defined(__APPLE__)
 #   include <sys/syslimits.h>
-// TODO: figure out why defined(__has_include) didn't work here on ToughGuy, but did on Midna
 #elif defined __linux__
 #   include <linux/limits.h>
 #else
@@ -130,13 +139,6 @@
 #else
 #   define LIKELY(a) (a)
 #   define UNLIKELY(a) (a)
-#endif
-
-// TODO: figure out a better feature test method. Maybe this is an opportunity to learn autotools? Could also use gnulib to get their implementation of getline.
-#if defined(__APPLE__) || defined(__linux__) || defined(__CYGWIN__)
-#   define ARRGEN_GETLINE_SUPPORTED
-#else
-#   warning "This system doesn't support GNU getline. TODO find a better solution here"
 #endif
 
 #ifdef VERBOSE_DEBUG
