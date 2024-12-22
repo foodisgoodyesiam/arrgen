@@ -20,7 +20,7 @@ example1: example1.o gen_arrays_test.o
 #this shold tell it that the header only exists once the c file exists
 gen_arrays.h: gen_arrays_test.c
 
-gen_arrays_test.c: example.arrgen ../arrgen.c small_image.png
+gen_arrays_test.c: example.arrgen ../src/arrgen.c small_image.png
 	../arrgen -f example.arrgen
 
 #you need to tell it that the header won't exist yet

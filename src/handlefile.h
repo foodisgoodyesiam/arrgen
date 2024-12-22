@@ -24,7 +24,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct {
-    const char* path;
+    const char* path_original; // path to file, as originally specified by user
+    const char* path_to_open; // path to file, relative to current working directory (may be different because above can be relative to parameter file, if specified in parameter file)
     const char* length_name;
     const char* array_name;
     const char* attributes;
@@ -35,8 +36,9 @@ typedef struct {
 } InputFileParams;
 
 typedef struct {
-    const char* c_path;
-    const char* h_name;
+    const char* c_path; // file path of the c file to generate, relative to current working directory
+    const char* h_name; // file path of the header, relative to the directory containing the c file
+    const char* params_file; // the file the settings were loaded from, if any
     bool create_header;
     size_t num_inputs;
     InputFileParams inputs[];

@@ -47,6 +47,9 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="bin/Release/arrgen -f example/example.arrgen" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
@@ -66,6 +69,13 @@
 			<Option target="Example" />
 		</Unit>
 		<Unit filename="example/example1.c">
+			<Option compilerVar="CC" />
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/gen_arrays.h">
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/gen_arrays_test.c">
 			<Option compilerVar="CC" />
 			<Option target="Example" />
 		</Unit>

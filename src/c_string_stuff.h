@@ -20,9 +20,17 @@
 #define C_STRING_STUFF_H_INCLUDED
 #include "arrgen.h"
 
-const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
+char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_ACCESS(read_only, 3)
+    ATTR_MALLOC
+    ATTR_RETURNS_NONNULL
+    ATTR_NODISCARD
+    ATTR_NONNULL;
+
+char* pathRelativeToFile(const char* base_file_path, const char* relative_path)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_ACCESS(read_only, 2)
     ATTR_MALLOC
     ATTR_RETURNS_NONNULL
     ATTR_NODISCARD

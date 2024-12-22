@@ -57,15 +57,7 @@ bool handleFile(const OutputFileParams* params) {
 static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
     DLOG("entering function");
     // this is a clunky way of handling it, but whatever
-    char h_path[strlen(params->c_path) + strlen(params->h_name)+2]; // +2 for / and null terminator, in the worst case...? worse than the worst case
-    strcpy(h_path, params->c_path);
-    char* spot_to_insert_header_name = strchr(h_path, '/');
-    if (spot_to_insert_header_name==NULL)
-        spot_to_insert_header_name = h_path;
-    else
-        spot_to_insert_header_name++;
-    strcpy(spot_to_insert_header_name, params->h_name);
-    DLOG("c_path: %s, h_name: %s, resulting h_path: %s", params->c_path, params->h_name, h_path);
+    const char *h_path = pathRelativeToFile(params->c_path, params->h_name);
     FILE *out = fopen(h_path, "wb");
     bool ret;
     if (UNLIKELY(out==NULL)) {
@@ -97,7 +89,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
             fprintf(out,
                 "// %s\n"
                 "extern%s unsigned char %s[%s]",
-                params->inputs[i].path,
+                params->inputs[i].path_original,
                 (LIKELY(params->inputs[i].make_const) ? " const" : ""),
                 params->inputs[i].array_name,
                 params->inputs[i].length_name);
@@ -124,6 +116,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         ret = true;
         free((void*)include_guard); // totally unnecessary but why not
     }
+    free((void*)h_path);
     DLOG("returning %hhu", ret);
     return (ret);
 }
@@ -168,14 +161,14 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     initializeLookup(input->base, input->aligned);
     // following a no-early-return policy here because of the various unwinding necessary
 #ifdef ARRGEN_MMAP_SUPPORTED
-    int fd = open(input->path, O_RDONLY);
+    int fd = open(input->path_to_open, O_RDONLY);
     if (UNLIKELY(fd<0)) {
-        myErrorErrno("%s: could not open", input->path);
+        myErrorErrno("%s: could not open", input->path_to_open);
         length = -1;
     } else {
         struct stat stats;
         if (UNLIKELY(fstat(fd, &stats)!=0)) {
-            myErrorErrno("%s: could not fstat fd %d", input->path, fd);
+            myErrorErrno("%s: could not fstat fd %d", input->path_to_open, fd);
             length = -1;
         } else {
             switch (stats.st_mode & S_IFMT) {
@@ -184,51 +177,51 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                 // TODO: consider if it should fall back to streaming on mmap failure
                 const uint8_t* mem = (const uint8_t*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
                 if (UNLIKELY(close(fd)!=0))
-                    myErrorErrno("%s: could not close fd %d", input->path, fd);
+                    myErrorErrno("%s: could not close fd %d", input->path_to_open, fd);
                 if (UNLIKELY(mem==MAP_FAILED)) {
-                    myErrorErrno("%s: mmap", input->path);
+                    myErrorErrno("%s: mmap", input->path_to_open);
                     length = -1;
                 } else {
                     if (length > arrgen_pagesize_) {
                         // why the frick does madvise not qualify the argument with const...
                         if (UNLIKELY(madvise((void*)mem, length, MADV_SEQUENTIAL)))
-                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path, length, mem);
+                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path_to_open, length, mem);
                     }
                     ssize_t cur_line_pos = -1;
                     writeArrayContents(out, mem, length, &cur_line_pos, input->line_length);
                     if (UNLIKELY(munmap((void*)mem, length))!=0)
-                        myErrorErrno("%s: munmap", input->path);
+                        myErrorErrno("%s: munmap", input->path_to_open);
                 }
                 }; break;
             case S_IFBLK:
-                myError("%s: what the heck are you doing?", input->path);
+                myError("%s: what the heck are you doing?", input->path_to_open);
                 length = -1;
                 break;
             default: {
                 FILE* in = fdopen(fd, "rb");
                 if (UNLIKELY(in==NULL)) {
-                    myErrorErrno("%s: could not fdopen %d", input->path, fd);
+                    myErrorErrno("%s: could not fdopen %d", input->path_to_open, fd);
                     length = -1;
                     if (UNLIKELY(close(fd)!=0))
-                        myErrorErrno("%s: could not close fd %d", input->path, fd);
+                        myErrorErrno("%s: could not close fd %d", input->path_to_open, fd);
                 } else {
-                    length = writeArrayStreamed(out, in, input->path, input->line_length);
+                    length = writeArrayStreamed(out, in, input->path_to_open, input->line_length);
                     if (UNLIKELY(fclose(in)!=0))
-                        myErrorErrno("%s: could not fclose", input->path);
+                        myErrorErrno("%s: could not fclose", input->path_to_open);
                 }
                 } break;
             }
         }
     }
 #else // MMAP_SUPPORTED
-    FILE* in = fopen(input->path, "rb");
+    FILE* in = fopen(input->path_to_open, "rb");
     if (UNLIKELY(in==NULL)) {
-        myErrorErrno("%s: could not fopen", input->path);
+        myErrorErrno("%s: could not fopen", input->path_to_open);
         length = -1;
     } else {
-        length = writeArrayStreamed(out, in, input->path);
+        length = writeArrayStreamed(out, in, input->path_to_open);
         if (UNLIKELY(fclose(in)!=0))
-            myErrorErrno("%s: could not fclose", input->path);
+            myErrorErrno("%s: could not fclose", input->path_to_open);
     }
 #endif // ARRGEN_MMAP_SUPPORTED
     DLOG("returning %zd", length);

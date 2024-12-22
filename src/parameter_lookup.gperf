@@ -1,4 +1,4 @@
-struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*); const bool valid_global; const bool valid_individual;};
+struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*, bool); const bool valid_global; const bool valid_individual;};
 %{
 #include "../src/arrgen.h"
 #include "../src/parameters.h"

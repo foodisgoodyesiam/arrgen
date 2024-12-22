@@ -39,7 +39,7 @@ static uint8_t parseBase(char c)
 #define NAME_PREFIX "ARRGEN_"
 
 // hmm. is there an alternative to malloc for this?
-const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix) {
+char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix) {
     const size_t prefix_length = strlen(NAME_PREFIX);
     const size_t suffix_length = strlen(suffix);
     const size_t out_length = prefix_length+name_length+suffix_length+1; // +1 for null terminator
@@ -56,6 +56,23 @@ const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, con
             ret[prefix_length+i] = '_';
     }
     memcpy(&ret[prefix_length+name_length], suffix, suffix_length+1);
+    return ret;
+}
+
+char* pathRelativeToFile(const char* base_file_path, const char* relative_path) {
+    // this could be optimized in many ways, but it's so far from a bottleneck that it doens't matter
+    size_t ret_length = strlen(base_file_path) + strlen(relative_path);
+    char *ret = malloc(ret_length+1); // +2 for null terminator, in the worst case...? worse than the worst case
+    if (UNLIKELY(ret==NULL))
+        myFatal("could not allocate %zu bytes", ret_length+1);
+    strcpy(ret, base_file_path);
+    char* spot_to_insert_relative_path = strchr(ret, '/');
+    if (spot_to_insert_relative_path==NULL)
+        spot_to_insert_relative_path = ret; // means there are no directory separators, so just copy relative_path into the return string
+    else
+        spot_to_insert_relative_path++; // means insert it after the last /
+    strcpy(spot_to_insert_relative_path, relative_path);
+    DLOG("base_file_path: %s, relative_path: %s, resulting concatenation: %s, allocated size: %zu, actual size: %zu", base_file_path, relative_path, ret, ret_length, strlen(ret));
     return ret;
 }
 

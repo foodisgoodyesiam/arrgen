@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.2.1.next"
+#define VERSION "0.3.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -83,9 +83,9 @@ int main(int arg_num, const char** args) {
         myFatalErrno("failed to allocate %zu bytes", current_params_size_);
     params_->c_path = NULL;
     params_->h_name = NULL;
+    params_->params_file = NULL;
     params_->create_header = true;
     params_->num_inputs = 0;
-    const char* params_file = NULL;
 
     bool flags_end_found = false;
     bool skip_second_arg = false;
@@ -94,7 +94,7 @@ int main(int arg_num, const char** args) {
         if (!flags_end_found && LIKELY(args[i][0]=='-')) {
             if (args[i][1]=='-') {
                 // the lookup table probably increases size by a lot, but it should be more maintainable
-                if (parseParameterLine(&args[i][2])) {
+                if (parseParameterLine(&args[i][2], false)) {
                     // bloop
                 } else if (args[i][2]=='\0')
                     flags_end_found = true;
@@ -119,30 +119,30 @@ int main(int arg_num, const char** args) {
                     case 'x': defaults_.base = 16U; continue;
                     case '8': defaults_.base = 8U; continue;
                     case 'f':
-                        if (params_file != NULL)
+                        if (params_->params_file != NULL)
                             myFatal("you can only give one file if using -f");
                         else if (i+1 == arg_num)
                             myFatal("you passed -f but did not give a file");
-                        params_file = args[i+1];
+                        params_->params_file = args[i+1];
                         skip_second_arg = true;
                         continue;
                     default:
                         myFatal("unknown short flag %c", *c);
                     }
         } else // parse as input file
-            newInputFile(args[i]);
+            newInputFile(args[i], false);
     }
 
-    if (params_file==NULL) {
+    if (params_->params_file==NULL) {
         if (UNLIKELY(params_->num_inputs == 0))
             myFatal("you forgot to give me any files");
     } else {
         if (UNLIKELY(params_->num_inputs > 0))
-            myFatal("%s: cannot give other files on command line if passing settings file %s", params_->inputs[0].path, params_file);
-        parseParamsFile(params_file);
+            myFatal("%s: cannot give other files on command line if passing settings file %s", params_->inputs[0].path_original, params_->params_file);
+        parseParamsFile(params_->params_file);
     }
 
-    // these current defaults make it not usable yet
+    // hmm. if I bother to free any of this memory, will need to probably duplicate this string instead of just assigning the pointer
     if (params_->c_path == NULL)
         params_->c_path = DEFAULT_C_PATH;
     if (params_->h_name == NULL)
@@ -152,9 +152,9 @@ int main(int arg_num, const char** args) {
         InputFileParams *input = &params_->inputs[i];
         // TODO figure out how to track which ones are malloc'd? Or maybe I just don't bother to free them
         if (input->array_name==NULL)
-            input->array_name = createCName(input->path, strlen(input->path), "");
+            input->array_name = createCName(input->path_original, strlen(input->path_original), "");
         if (input->length_name==NULL)
-            input->length_name = createCName(input->path, strlen(input->path), "_LENGTH");
+            input->length_name = createCName(input->path_original, strlen(input->path_original), "_LENGTH");
         // alignment null is fine
     }
 
@@ -188,10 +188,10 @@ static void parseParamsFile(const char* path) {
         case '#': // it's a comment line
             break;
         case '@': // it's an input file path
-            newInputFile(&buf[1]);
+            newInputFile(&buf[1], true);
             break;
         case '%': // it's a parameter
-            if (!parseParameterLine(&buf[1]))
+            if (!parseParameterLine(&buf[1], true))
                 myFatal("%s: line %u: invalid parameter line %s", path, cur_line, buf);
             break;
         default: // it's invalid
@@ -203,7 +203,6 @@ static void parseParamsFile(const char* path) {
         errno = error;
         myFatalErrno("%s", path);
     }
-
     // TODO: free stuff, but only if DEBUG is defined
     free(buf);
 }
