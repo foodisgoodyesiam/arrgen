@@ -219,7 +219,7 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
         myErrorErrno("%s: could not fopen", input->path_to_open);
         length = -1;
     } else {
-        length = writeArrayStreamed(out, in, input->path_to_open);
+        length = writeArrayStreamed(out, in, input->path_to_open, input->line_length);
         if (UNLIKELY(fclose(in)!=0))
             myErrorErrno("%s: could not fclose", input->path_to_open);
     }
