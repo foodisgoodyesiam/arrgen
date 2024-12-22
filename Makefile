@@ -69,23 +69,26 @@ endif
 
 all: arrgen
 clean:
-	rm -rf arrgen *.o *.d
+	rm -rf src/*.o \
+		src/*.d \
+		src/gen_* \
+		arrgen
 
-arrgen: arrgen.o \
-	errors.o \
-	handlefile.o \
-	pagesize.o \
-	c_string_stuff.o \
-	parameters.o \
-	gen_parameter_lookup.o \
-	writearray.o
+arrgen: src/arrgen.o \
+	src/errors.o \
+	src/handlefile.o \
+	src/pagesize.o \
+	src/c_string_stuff.o \
+	src/parameters.o \
+	src/gen_parameter_lookup.o \
+	src/writearray.o
 
 install: $(prefix)/arrgen
 
 $(prefix)/arrgen: arrgen
 	install -m 755 $< $@
 
-gen_parameter_lookup.c: parameter_lookup.gperf
+src/gen_parameter_lookup.c: src/parameter_lookup.gperf
 	gperf -m 100 $< >$@
 
--include $(wildcard *.d)
+-include $(wildcard src/*.d)

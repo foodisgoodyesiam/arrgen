@@ -52,30 +52,30 @@
 		<Unit filename="COPYING" />
 		<Unit filename="Makefile" />
 		<Unit filename="TODO" />
-		<Unit filename="arrgen.c">
+		<Unit filename="src/arrgen.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="arrgen.h">
+		<Unit filename="src/arrgen.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="c_string_stuff.c">
+		<Unit filename="src/c_string_stuff.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="c_string_stuff.h">
+		<Unit filename="src/c_string_stuff.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="errors.c">
+		<Unit filename="src/errors.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="errors.h">
+		<Unit filename="src/errors.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
@@ -89,43 +89,43 @@
 			<Option compilerVar="CC" />
 			<Option target="Example" />
 		</Unit>
-		<Unit filename="gen_parameter_lookup.c">
+		<Unit filename="src/gen_parameter_lookup.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="handlefile.c">
+		<Unit filename="src/handlefile.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="handlefile.h">
+		<Unit filename="src/handlefile.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="pagesize.cpp">
+		<Unit filename="src/pagesize.cpp">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="parameter_lookup.gperf">
+		<Unit filename="src/parameter_lookup.gperf">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="parameters.c">
+		<Unit filename="src/parameters.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="parameters.h">
+		<Unit filename="src/parameters.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="writearray.c">
+		<Unit filename="src/writearray.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="writearray.h">
+		<Unit filename="src/writearray.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
