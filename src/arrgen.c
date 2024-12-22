@@ -27,8 +27,9 @@
 #include "writearray.h"
 #include "c_string_stuff.h"
 #include "parameters.h"
+#include "version_message.h"
 
-#define VERSION "0.2.0.next"
+#define VERSION "0.2.1.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -59,6 +60,12 @@ static const char HELPTEXT[] =
     "    --h_name=       Put the generated (or referenced) header file at this location relative to the .c file. Default " DEFAULT_H_NAME "\n"
     "TODO describe defaults and input file format\n"
     "TODO update this help text to match latest updates\n"
+    ;
+
+// TODO: include other build settings and preprocessor defines? feature test results?
+static const char* VERSIONTEXT =
+    "arrgen version " VERSION ". Copyright © 2024 Steven Marion\n"
+    ARRGEN_VERSION_MESSAGE
     ;
 
 static void parseParamsFile(const char* path)
@@ -95,7 +102,7 @@ int main(int arg_num, const char** args) {
                     fwrite(HELPTEXT, strlen(HELPTEXT), 1, stdout);
                     return 0;
                 } else if (!strcmp(&args[i][2], "version")) {
-                    fprintf(stdout, "arrgen version " VERSION ". Copyright 2024 Steven Marion\n");
+                    fwrite(VERSIONTEXT, strlen(VERSIONTEXT), 1, stdout);
                     return 0;
                 } else
                     myFatal("unknown long flag %s", args[i]);

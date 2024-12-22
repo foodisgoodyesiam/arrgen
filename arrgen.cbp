@@ -16,6 +16,7 @@
 				</Compiler>
 				<ExtraCommands>
 					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
+					<Add before="./createversionmessage.sh" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Release">
@@ -25,12 +26,14 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-DNDEBUG=1" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
+					<Add before="./createversionmessage.sh" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Example">
@@ -52,6 +55,29 @@
 		<Unit filename="COPYING" />
 		<Unit filename="Makefile" />
 		<Unit filename="TODO" />
+		<Unit filename="createversionmessage.sh">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="example/Makefile">
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/example.arrgen">
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/example1.c">
+			<Option compilerVar="CC" />
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="gen_src/build_version_message.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="gen_src/parameter_lookup.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
 		<Unit filename="src/arrgen.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
@@ -79,21 +105,6 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="example/Makefile">
-			<Option target="Example" />
-		</Unit>
-		<Unit filename="example/example.arrgen">
-			<Option target="Example" />
-		</Unit>
-		<Unit filename="example/example1.c">
-			<Option compilerVar="CC" />
-			<Option target="Example" />
-		</Unit>
-		<Unit filename="gen_src/parameter_lookup.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
 		<Unit filename="src/handlefile.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
@@ -117,6 +128,10 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="src/parameters.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/version_message.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>

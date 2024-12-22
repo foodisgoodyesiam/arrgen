@@ -33,6 +33,10 @@
 #   directory to install arrgen for the install target
 #   default is /usr/local/bin
 
+#always first run this, before any dependencies are checked
+#TODO: check if this works on non-GNU make
+ignoreme ::= $(shell ./createversionmessage.sh)
+
 DEBUG ?= 0
 ifeq ($(DEBUG),0)
 	lto ?= 2
@@ -82,13 +86,19 @@ arrgen: src/arrgen.o \
 	src/parameters.o \
 	gen_src/parameter_lookup.o \
 	src/writearray.o
+	$(CC) -o $@ $^ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 install: $(prefix)/arrgen
 
 $(prefix)/arrgen: arrgen
 	install -m 755 $< $@
 
+src/version_message.h: gen_src/build_version_message.h
+
 gen_src/parameter_lookup.c: src/parameter_lookup.gperf
 	gperf -m 100 $< >$@
 
--include $(wildcard src/*.d)
+gen_src/build_version_message.h:
+	./createversionmessage.sh
+
+-include $(wildcard src/*.d) $(wildcard gen_src/*.d)
