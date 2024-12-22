@@ -15,7 +15,7 @@
 					<Add option="-g" />
 				</Compiler>
 				<ExtraCommands>
-					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Release">
@@ -30,7 +30,7 @@
 					<Add option="-s" />
 				</Linker>
 				<ExtraCommands>
-					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Example">
@@ -89,7 +89,7 @@
 			<Option compilerVar="CC" />
 			<Option target="Example" />
 		</Unit>
-		<Unit filename="src/gen_parameter_lookup.c">
+		<Unit filename="gen_src/parameter_lookup.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />

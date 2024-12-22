@@ -71,7 +71,7 @@ all: arrgen
 clean:
 	rm -rf src/*.o \
 		src/*.d \
-		src/gen_* \
+		gen_src/*.* \
 		arrgen
 
 arrgen: src/arrgen.o \
@@ -80,7 +80,7 @@ arrgen: src/arrgen.o \
 	src/pagesize.o \
 	src/c_string_stuff.o \
 	src/parameters.o \
-	src/gen_parameter_lookup.o \
+	gen_src/parameter_lookup.o \
 	src/writearray.o
 
 install: $(prefix)/arrgen
@@ -88,7 +88,7 @@ install: $(prefix)/arrgen
 $(prefix)/arrgen: arrgen
 	install -m 755 $< $@
 
-src/gen_parameter_lookup.c: src/parameter_lookup.gperf
+gen_src/parameter_lookup.c: src/parameter_lookup.gperf
 	gperf -m 100 $< >$@
 
 -include $(wildcard src/*.d)

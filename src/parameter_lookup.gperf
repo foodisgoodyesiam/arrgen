@@ -1,7 +1,7 @@
 struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*); const bool valid_global; const bool valid_individual;};
 %{
-#include "arrgen.h"
-#include "parameters.h"
+#include "../src/arrgen.h"
+#include "../src/parameters.h"
 %}
 %struct-type
 %language=ANSI-C
