@@ -122,7 +122,7 @@
 #else
 #   define ATTR_CONST
 #endif
-#if __STDC_VERSION__ >= 202311L
+#if __STDC_VERSION__ >= 202000L
 #   define ATTR_NODISCARD [[nodiscard]]
 #elif __has_attribute(warn_unused_result)
 #   define ATTR_NODISCARD __attribute__ ((warn_unused_result))

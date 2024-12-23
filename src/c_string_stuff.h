@@ -20,30 +20,31 @@
 #define C_STRING_STUFF_H_INCLUDED
 #include "arrgen.h"
 
+ATTR_NODISCARD
 char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_ACCESS(read_only, 3)
     ATTR_MALLOC
     ATTR_RETURNS_NONNULL
-    ATTR_NODISCARD
     ATTR_NONNULL;
 
+ATTR_NODISCARD
 char* pathRelativeToFile(const char* base_file_path, const char* relative_path)
     ATTR_ACCESS(read_only, 1)
     ATTR_ACCESS(read_only, 2)
     ATTR_MALLOC
     ATTR_RETURNS_NONNULL
-    ATTR_NODISCARD
     ATTR_NONNULL;
 
 // TODO: figure out if there's a convenient way to not need this
+ATTR_NODISCARD
 char* duplicateString(const char* str)
     ATTR_ACCESS(read_only, 1)
     ATTR_MALLOC
     ATTR_RETURNS_NONNULL
-    ATTR_NODISCARD
     ATTR_NONNULL;
 
+ATTR_NODISCARD
 char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length)
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_MALLOC
