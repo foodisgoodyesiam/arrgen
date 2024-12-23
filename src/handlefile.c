@@ -244,7 +244,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
         DLOG("%s: num_read = %zu\ttotal_length=%zu", in_path, num_read, total_length);
         writeArrayContents(out, buf, num_read, &cur_line_pos, line_limit);
     }
-    return (error==0 ? total_length : -1);
+    return (error==0 ? (ssize_t)total_length : -1);
 }
 
 
