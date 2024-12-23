@@ -66,7 +66,7 @@ char* pathRelativeToFile(const char* base_file_path, const char* relative_path) 
     if (UNLIKELY(ret==NULL))
         myFatal("could not allocate %zu bytes", ret_length+1);
     strcpy(ret, base_file_path);
-    char* spot_to_insert_relative_path = strchr(ret, '/');
+    char* spot_to_insert_relative_path = strrchr(ret, '/');
     if (spot_to_insert_relative_path==NULL)
         spot_to_insert_relative_path = ret; // means there are no directory separators, so just copy relative_path into the return string
     else
