@@ -80,6 +80,7 @@ ifeq ($(warnflags),1)
 		-Wsuggest-attribute=cold \
 		-Wsuggest-attribute=malloc \
 		-Wsuggest-attribute=returns_nonnull \
+		-fisolate-erroneous-paths-attribute \
 		-Wall
 endif
 ifeq ($(lto),1)

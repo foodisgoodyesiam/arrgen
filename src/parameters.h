@@ -36,6 +36,7 @@ extern "C" {
 // TODO: is this usage of read_only actually right, for strings where the null terminator is one past the length indicated by len?>
 const struct ArrgenParameter* identifyParameter(register const char *str, register size_t len)
     ATTR_ACCESS(read_only, 1, 2)
+    ATTR_PURE
     ATTR_NONNULL;
 
 // TODO find a cleaner solution that doesn't give current_params_size_ external linkage.

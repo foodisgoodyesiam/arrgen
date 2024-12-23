@@ -144,7 +144,7 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
             ret = LIKELY(length>=0);
             if (!ret)
                 break;
-            lengths[i] = length;
+            lengths[i] = (size_t)length;
             fprintf(out, "};\n");
         }
         if (UNLIKELY(ferror(out))) {
@@ -177,7 +177,7 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
             case S_IFREG: {
                 length = stats.st_size;
                 // TODO: consider if it should fall back to streaming on mmap failure
-                const uint8_t* mem = (const uint8_t*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
+                const uint8_t* mem = (const uint8_t*) mmap(NULL, (size_t)length, PROT_READ, MAP_SHARED, fd, 0);
                 if (UNLIKELY(close(fd)!=0))
                     myErrorErrno("%s: could not close fd %d", input->path_to_open, fd);
                 if (UNLIKELY(mem==MAP_FAILED)) {
@@ -186,12 +186,12 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
                 } else {
                     if (length > arrgen_pagesize_) {
                         // why the frick does madvise not qualify the argument with const...
-                        if (UNLIKELY(madvise((void*)mem, length, MADV_SEQUENTIAL)))
+                        if (UNLIKELY(madvise((void*)mem, (size_t)length, MADV_SEQUENTIAL)))
                             myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path_to_open, length, mem);
                     }
                     ssize_t cur_line_pos = -1;
-                    writeArrayContents(out, mem, length, &cur_line_pos, input->line_length);
-                    if (UNLIKELY(munmap((void*)mem, length))!=0)
+                    writeArrayContents(out, mem, (size_t)length, &cur_line_pos, input->line_length);
+                    if (UNLIKELY(munmap((void*)mem, (size_t)length))!=0)
                         myErrorErrno("%s: munmap", input->path_to_open);
                 }
                 }; break;

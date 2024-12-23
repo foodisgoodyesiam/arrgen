@@ -76,9 +76,11 @@ char* pathRelativeToFile(const char* base_file_path, const char* relative_path) 
     return ret;
 }
 
+#if __STDC_VERSION__ < 202000L
 char* duplicateString(const char* str) {
     return duplicateStringLen(str, strlen(str));
 }
+#endif
 
 char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length) {
     char* ret = malloc(length+1);
