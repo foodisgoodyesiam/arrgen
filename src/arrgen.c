@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.4..next"
+#define VERSION "0.4.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"

@@ -129,11 +129,26 @@
 #else
 #   define ATTR_NODISCARD
 #endif
+#if __STDC_VERSION__ >= 202000L
+#   define ATTR_NORETURN [[noreturn]]
+#elif __STDC_VERSION__ >= 201112L
+#   include <stdnoreturn.h>
+#   define ATTR_NORETURN noreturn
+#elif __has_attribute(noreturn)
+#   define ATTR_NORETURN __attribute__ ((noreturn))
+#else
+#   define ATTR_NORETURN
+#endif
 #ifdef ARRGEN_H_TEMP_HAS_ATTRIBUTE
 #   undef __has_attribute // to not mess up headers included after this
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
+#ifdef __has_builtin
+#   if __has_builtin(__builtin_expect)
+#       define LIKELY(a) __builtin_expect((a), true)
+#       define UNLIKELY(a) __builtin_expect((a), false)
+#   endif
+#elif defined(__GNUC__) || defined(__clang__)
 #   define LIKELY(a) __builtin_expect((a), true)
 #   define UNLIKELY(a) __builtin_expect((a), false)
 #else
