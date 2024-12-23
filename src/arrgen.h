@@ -104,7 +104,11 @@
 #   define ATTR_NONSTRING
 #endif
 #if __has_attribute(malloc)
-#   define ATTR_MALLOC(a) __attribute__ ((malloc(a)))
+#   if defined(__GNUC__) && __GNUC__ >= 11
+#       define ATTR_MALLOC(a) __attribute__ ((malloc(a)))
+#   else
+#       define ATTR_MALLOC(a) __attribute__ ((malloc))
+#   endif
 #else
 #   define ATTR_MALLOC(a)
 #endif
