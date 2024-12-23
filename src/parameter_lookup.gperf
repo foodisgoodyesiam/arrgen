@@ -22,3 +22,4 @@ struct ArrgenParameter { int name_offset; void (*const handler)(const char*, Inp
 "base", registerBase, true, true
 "aligned", registerAligned, true, true
 "const", registerMakeConst, true, true
+"constexpr_length", registerConstexpr, true, false

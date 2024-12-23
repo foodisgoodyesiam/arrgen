@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.3.1.next"
+#define VERSION "0.4..next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -50,6 +50,8 @@ static const char HELPTEXT[] =
     "-A                  Do not vertically align (default)\n"
     "-c                  Make the array const (default)\n"
     "-C                  Do not make the array const\n"
+    "-l                  Make the array lengths in the generated header macros (default)\n"
+    "-L                  Make the array lengths in the generated header constexpr size_t\n"
     "    --base=         Use numerical base (8, 10, or 16) for arrays. Default 10\n"
     "-d                  Decimal (shortcut for --base=10)\n"
     "-x                  Hexadecimal (shortcut for --base=16)\n"
@@ -85,6 +87,7 @@ int main(int arg_num, const char** args) {
     params_->h_name = NULL;
     params_->params_file = NULL;
     params_->create_header = true;
+    params_->constexpr_length = false;
     params_->num_inputs = 0;
 
     bool flags_end_found = false;
@@ -111,6 +114,8 @@ int main(int arg_num, const char** args) {
                     switch (*c) {
                     case 'h': params_->create_header = true; continue;
                     case 'H': params_->create_header = false; continue;
+                    case 'l': params_->constexpr_length = false; continue;
+                    case 'L': params_->constexpr_length = true; continue;
                     case 'a': defaults_.aligned = true; continue;
                     case 'A': defaults_.aligned = false; continue;
                     case 'c': defaults_.make_const = true; continue;

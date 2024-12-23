@@ -130,4 +130,8 @@ void registerMakeConst(const char* str, InputFileParams* params, bool from_param
     params->make_const = parseBool(str, "const");
 }
 
+void registerConstexpr(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->constexpr_length = parseBool(str, "constexpr_length");
+}
+
 

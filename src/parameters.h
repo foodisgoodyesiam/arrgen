@@ -70,6 +70,8 @@ void registerAligned(const char* str, InputFileParams* params, bool from_params_
     ATTR_NONNULL;
 void registerMakeConst(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
+void registerConstexpr(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
 
 #ifdef __cplusplus
 }

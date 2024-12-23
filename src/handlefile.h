@@ -40,6 +40,7 @@ typedef struct {
     const char* h_name; // file path of the header, relative to the directory containing the c file
     const char* params_file; // the file the settings were loaded from, if any
     bool create_header;
+    bool constexpr_length; // make the lengths constexpr instead of defines
     size_t num_inputs;
     InputFileParams inputs[];
 } OutputFileParams;
