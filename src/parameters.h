@@ -20,14 +20,9 @@
 #define PARAMETERS_H_INCLUDED
 #include "arrgen.h"
 #include "handlefile.h"
-#define USE_GPERF
 
 typedef struct ArrgenParameter {
-#ifdef USE_GPERF
     int name_offset;
-#else
-    const char *parameter_name;
-#endif
     void (*const handler)(const char*, InputFileParams*, bool);
     const bool valid_global;
     const bool valid_individual;
