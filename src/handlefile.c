@@ -86,24 +86,19 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
                 params->inputs[i].length_name,
                 (uint64_t)lengths[i]);
         }
-        fprintf(out, "\n");
         for (size_t i=0; i<params->num_inputs; i++) {
             // TODO hmm, what do I do if the input file name contains a newline
             // TODO use the line pragma for attributes etc...? maybe unnecessary
             fprintf(out,
+                "\n"
                 "// %s\n"
-                "extern%s unsigned char %s[%s]",
+                "%s"
+                "extern%s unsigned char %s[%s];\n",
                 params->inputs[i].path_original,
+                (params->inputs[i].attributes==NULL ? "" : params->inputs[i].attributes),
                 (LIKELY(params->inputs[i].make_const) ? " const" : ""),
                 params->inputs[i].array_name,
                 params->inputs[i].length_name);
-            if (params->inputs[i].attributes==NULL)
-                fprintf(out, ";\n");
-            else {
-                fprintf(out,
-                    " %s;\n",
-                    params->inputs[i].attributes);
-            }
         }
         fprintf(out,
             "\n"
@@ -139,7 +134,8 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
         for (size_t i=0; i<params->num_inputs; i++) {
             const InputFileParams *input = &params->inputs[i];
             fprintf(out,
-                "const unsigned char %s[%s] = {",
+                "%sunsigned char %s[%s] = {",
+                (input->make_const ? "const " : ""),
                 input->array_name,
                 input->length_name);
             ssize_t length = writeFileContents(out, input);

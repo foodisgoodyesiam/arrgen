@@ -30,7 +30,7 @@ typedef struct {
     const char* path_to_open; // path to file, relative to current working directory (may be different because above can be relative to parameter file, if specified in parameter file)
     const char* length_name;
     const char* array_name;
-    const char* attributes;
+    char* attributes;
     uint32_t line_length;
     uint8_t base;
     bool aligned;

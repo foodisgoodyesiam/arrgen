@@ -51,6 +51,8 @@ void newInputFile(const char* path, bool from_params_file) {
     // initialize to defaults
     *input = defaults_;
     input->path_original = duplicateString(path);
+    if (defaults_.attributes!=NULL)
+        input->attributes = duplicateString(defaults_.attributes);
     // TODO: remember this when writing memory deallocation code, if I ever do that
     input->path_to_open = (from_params_file ? pathRelativeToFile(params_->params_file, path) : input->path_original);
 }
@@ -104,15 +106,19 @@ void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, 
 }
 
 void registerLengthName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
+    if (UNLIKELY(params->length_name!=NULL))
+        myFatal("cannot give length_name for a target more than once");
     params->length_name = duplicateString(str);
 }
 
 void registerArrayName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
+    if (UNLIKELY(params->length_name!=NULL))
+        myFatal("cannot give length_name for a target more than once");
     params->array_name = duplicateString(str);
 }
 
 void registerAttributes(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
-    params->attributes = duplicateString(str);
+    params->attributes = sprintfAppend(params->attributes, "%s\n", str);
 }
 
 void registerLineLength(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {

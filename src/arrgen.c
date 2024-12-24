@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.5.0"
+#define VERSION "0.5.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -97,7 +97,7 @@ int main(int arg_num, const char** args) {
         skip_second_arg = false;
         if (!flags_end_found && LIKELY(args[i][0]=='-')) {
             if (args[i][1]=='-') {
-                // the lookup table probably increases size by a lot, but it should be more maintainable
+                // the lookup table probably increases size, but it should be more maintainable
                 if (parseParameterLine(&args[i][2], false)) {
                     // bloop
                 } else if (args[i][2]=='\0')

@@ -27,6 +27,8 @@
 #   else
 #       define CUSTOM_ATTRIBUTE_ALIGNED(n)
 #   endif
+#else
+#   define CUSTOM_ATTRIBUTE_ALIGNED(n)
 #endif
 
 #endif // CUSTOM_EXTRA_HEADER_H_INCLUDED

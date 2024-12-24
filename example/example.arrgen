@@ -34,7 +34,7 @@
 %aligned=yes
 
 @../src/arrgen.c
-%attributes=
 %base=10
 %aligned=false
+%const=no
 %line_length=0
