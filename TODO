@@ -1,5 +1,6 @@
 -deallocate memory
 -write tests
+-add compile flag information to --version text
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
 -write help text
 -clean up the control flow
