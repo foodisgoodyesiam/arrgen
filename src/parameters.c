@@ -81,7 +81,7 @@ bool parseParameterLine(const char* arg, bool from_params_file) {
 
 void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file) {
     if (UNLIKELY(params_->c_path!=NULL))
-        myFatal("cannot give c_path more than once");
+        myFatal("cannot give %s more than once", "c_path");
     // is there a point to asserting non-null? a segfault is already a strong assertion
     //assert(params_->params_file!=NULL);
     params_->c_path = (from_params_file ? pathRelativeToFile(params_->params_file, str) : duplicateString(str));
@@ -89,7 +89,7 @@ void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED, bool fr
 
 void registerHName(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
     if (UNLIKELY(params_->h_name!=NULL))
-        myFatal("cannot give h_name more than once");
+        myFatal("cannot give %s more than once", "h_name");
     params_->h_name = duplicateString(str);
 }
 
@@ -107,13 +107,13 @@ void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, 
 
 void registerLengthName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     if (UNLIKELY(params->length_name!=NULL))
-        myFatal("cannot give length_name for a target more than once");
+        myFatal("cannot give %s for a target more than once", "length_name");
     params->length_name = duplicateString(str);
 }
 
 void registerArrayName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     if (UNLIKELY(params->length_name!=NULL))
-        myFatal("cannot give length_name for a target more than once");
+        myFatal("cannot give %s for a target more than once", "array_name");
     params->array_name = duplicateString(str);
 }
 
