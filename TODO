@@ -1,5 +1,4 @@
 -check if switching params.c stuff to format strings for the error messages reduces code size
--check if using switch case in gperf reduces code size
 -deallocate memory
 -write tests
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
