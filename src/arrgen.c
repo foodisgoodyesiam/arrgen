@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.4.2.next"
+#define VERSION "0.5.0"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -85,6 +85,7 @@ int main(int arg_num, const char** args) {
         myFatalErrno("failed to allocate %zu bytes", current_params_size_);
     params_->c_path = NULL;
     params_->h_name = NULL;
+    params_->header_top_text = NULL;
     params_->params_file = NULL;
     params_->create_header = true;
     params_->constexpr_length = false;
@@ -148,6 +149,7 @@ int main(int arg_num, const char** args) {
     }
 
     // hmm. if I bother to free any of this memory, will need to probably duplicate this string instead of just assigning the pointer
+    // maybe I should move this default-setting to a dedicated function? hmm
     if (params_->c_path == NULL)
         params_->c_path = DEFAULT_C_PATH;
     if (params_->h_name == NULL)

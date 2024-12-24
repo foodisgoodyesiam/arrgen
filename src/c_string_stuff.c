@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "errors.h"
+#include <stdarg.h>
+#include <assert.h>
+#include <stdio.h>
 
 #if defined(__GNUC__) || defined(__clang__)
 #   define USE_FANCY_INT_PARSING
@@ -100,6 +103,33 @@ const char* customBasename(const char* path) {
     return ret;
 }
 #endif // ARRGEN_USE_CUSTOM_BASENAME
+
+// hmm. this is pretty inefficient. TODO optimize this better, maybe provide existing buffer size
+char* sprintfAppend(char* restrict base, const char* restrict format, ...) {
+    va_list args, args_copy;
+    char *ret;
+    size_t size_to_allocate, previous_len;
+    int len_to_append, len_written;
+    va_start(args, format);
+    va_copy(args_copy, args);
+    // query the length
+    len_to_append = vsnprintf(NULL, 0, format, args);
+    if (UNLIKELY(len_to_append<0))
+        myFatalErrno("vsnprintf: %s", format);
+    va_end(args);
+    previous_len = (base==NULL ? 0U : strlen(base));
+    size_to_allocate = previous_len+len_to_append+1; // +1 for null terminator
+    ret = realloc(base, size_to_allocate);
+    if (UNLIKELY(ret==NULL))
+        myFatalErrno("sprintfAppend: %s: failed to allocate %zu bytes", format, size_to_allocate);
+    len_written = vsnprintf(&ret[previous_len], len_to_append+1, format, args_copy);
+    va_end(args_copy);
+    // this is probably pointless (even the first time above), but it should barely add any code size
+    if (UNLIKELY(len_written<0))
+        myFatalErrno("vsnprintf: %s", format);
+    assert(len_written==len_to_append);
+    return ret;
+}
 
 // TODO: consider if I should just rely on the strto function? hmm
 uint32_t parseUint32(const char* arg, size_t length) {

@@ -14,6 +14,8 @@ struct ArrgenParameter { int name_offset; void (*const handler)(const char*, Inp
 %%
 "c_path", registerCPath, true, false
 "h_name", registerHName, true, false
+"extra_header", registerExtraHeader, true, false
+"extra_system_header", registerExtraSystemHeader, true, false
 "create_header", registerCreateHeader, true, false
 "array_name", registerArrayName, false, true
 "length_name", registerLengthName, false, true

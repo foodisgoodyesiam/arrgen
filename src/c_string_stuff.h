@@ -56,6 +56,22 @@ char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length)
     ATTR_RETURNS_NONNULL
     ATTR_NONNULL;
 
+/**
+ * @brief reallocates memory to print provided formatted string at the end of provided string.
+ * If provided string is null, allocates memory for it.
+ * @param base original string
+ * @param message printf-formatted string
+ * @return pointer to the newly allocated string
+*/
+ATTR_NODISCARD
+char* sprintfAppend(char* restrict base, const char* restrict format, ...)
+    ATTR_ACCESS(read_only, 2)
+    ATTR_ACCESS(read_write, 1)
+    ATTR_FORMAT(printf, 2, 3)
+    ATTR_MALLOC(free)
+    ATTR_RETURNS_NONNULL
+    ATTR_NONNULL_N(2);
+
 uint32_t parseUint32(const char* arg, size_t length)
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_PURE

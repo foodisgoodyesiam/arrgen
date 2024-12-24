@@ -56,7 +56,7 @@ ifeq ($(DEBUG),0)
 	optflags ?= -O3
 	CFLAGS ?= $(optflags) -Werror=format -Werror=implicit-function-declaration -fno-exceptions
 	CXXFLAGS ?= $(optflags) -Werror=format
-	CPPFLAGS ?= -DNDEBUG
+	CPPFLAGS ?= -DNDEBUG=1
 else
 	optflags ?= -Og
 	CFLAGS ?= -fsanitize=address,undefined,leak -g -fno-exceptions

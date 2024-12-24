@@ -91,6 +91,14 @@ void registerHName(const char* str, InputFileParams* params ATTR_UNUSED, bool fr
     params_->h_name = duplicateString(str);
 }
 
+void registerExtraHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->header_top_text = sprintfAppend(params_->header_top_text, "#include \"%s\"\n", str);
+}
+
+void registerExtraSystemHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->header_top_text = sprintfAppend(params_->header_top_text, "#include <%s>\n", str);
+}
+
 void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
     params_->create_header = parseBool(str, "create_header");
 }

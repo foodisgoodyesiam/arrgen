@@ -65,6 +65,9 @@
 		<Unit filename="example/Makefile">
 			<Option target="Example" />
 		</Unit>
+		<Unit filename="example/custom_extra_header.h">
+			<Option target="Example" />
+		</Unit>
 		<Unit filename="example/example.arrgen">
 			<Option target="Example" />
 		</Unit>

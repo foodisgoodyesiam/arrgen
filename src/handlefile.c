@@ -71,13 +71,15 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
             "%s"
             "#ifndef %s\n"
             "#define %s\n"
+            "%s"
             "#ifdef __cplusplus\n"
             "extern \"C\" {\n"
             "#endif // __cplusplus\n"
             "\n",
             (params->constexpr_length ? "#include <stddef.h>\n" : ""),
             include_guard,
-            include_guard);
+            include_guard,
+            (params->header_top_text==NULL ? "" : params->header_top_text));
         for (size_t i=0; i<params->num_inputs; i++) {
             fprintf(out,
                 (params->constexpr_length ? "constexpr size_t %s = %" PRIu64 "U;\n" : "#define %s %" PRIu64 "U\n"),

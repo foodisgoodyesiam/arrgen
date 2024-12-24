@@ -1,3 +1,5 @@
+-switch behavior to print attributes before declarations not after
+-deallocate memory
 -write tests
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
 -write help text

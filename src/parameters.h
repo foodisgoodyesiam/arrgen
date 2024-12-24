@@ -55,6 +55,10 @@ void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED, bool fr
     ATTR_NONNULL;
 void registerHName(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
+void registerExtraHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
+void registerExtraSystemHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
 void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
 void registerLengthName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
