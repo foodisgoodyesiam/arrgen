@@ -29,7 +29,7 @@
 #include "parameters.h"
 #include "version_message.h"
 
-#define VERSION "0.6.0"
+#define VERSION "0.6.0.next"
 
 #define DEFAULT_C_PATH "gen_arrays.c"
 #define DEFAULT_H_NAME "gen_arrays.h"
@@ -56,7 +56,7 @@ static const char HELPTEXT[] =
     "-d                  Decimal (shortcut for --base=10)\n"
     "-x                  Hexadecimal (shortcut for --base=16)\n"
     "-8                  Octal (shortcut for --base=8)\n"
-    "    --attributes=   In generated header, add attributes (eg __attribute__ ((whatever))) after declarations. Default off. can be used for memory alignment\n"
+    "    --attributes=   In generated header, add attributes (eg __attribute__ ((whatever))) before declarations. Default off. can be used for eg memory alignment\n"
     "    --line_length=  Max num input bytes to print per line. Default 0 (no limit)\n"
     "    --c_path=       Put the generated .c file at this location. Default " DEFAULT_C_PATH "\n"
     "    --h_name=       Put the generated (or referenced) header file at this location relative to the .c file. Default " DEFAULT_H_NAME "\n"
