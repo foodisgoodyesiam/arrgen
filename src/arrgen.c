@@ -169,19 +169,32 @@ int main(int arg_num, const char** args) {
 
     bool status = handleFile(params_);
 
+#ifndef NDEBUG
+    DLOG("deallocating");
     for (size_t i=0U; i<params_->num_inputs; i++) {
         InputFileParams *cur = &params_->inputs[i];
+        DLOG("path_original %zu", i);
         freeIfNull(cur->path_original);
+        DLOG("path_to_open %zu", i);
         if (cur->path_to_open!=cur->path_original)
             freeIfNull(cur->path_to_open);
+        DLOG("length_name %zu", i);
         freeIfNull(cur->length_name);
+        DLOG("array_name %zu", i);
         freeIfNull(cur->array_name);
+        DLOG("attributes %zu", i);
         freeIfNull(cur->attributes);
     }
-    free(params_->c_path);
-    free(params_->h_name);
+    DLOG("c_path");
+    free((void*)params_->c_path);
+    DLOG("h_name");
+    free((void*)params_->h_name);
+    DLOG("header_top_text");
     freeIfNull(params_->header_top_text);
-    freeIfNull(params_->params_file);
+    DLOG("params_");
+    free(params_);
+#endif // NDEBUG
+    // Do not deallocate params_file, it wasn't allocated
     exit(status ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
