@@ -14,39 +14,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with arrgen.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This header demonstrates a potential use of the extra header inclusion.
  */
 
-#ifndef HANDLEFILE_H_INCLUDED
-#define HANDLEFILE_H_INCLUDED
-#include "arrgen.h"
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+#ifndef CUSTOM_EXTRA_HEADER_H_INCLUDED
+#define CUSTOM_EXTRA_HEADER_H_INCLUDED
 
-typedef struct {
-    const char* path;
-    const char* length_name;
-    const char* array_name;
-    const char* attributes;
-    uint32_t line_length;
-    uint8_t base;
-    bool aligned;
-    bool make_const;
-} InputFileParams;
+#ifdef __has_attribute
+#   if __has_attribute(aligned)
+#       define CUSTOM_ATTRIBUTE_ALIGNED(n) __attribute__ ((aligned (n)))
+#   else
+#       define CUSTOM_ATTRIBUTE_ALIGNED(n)
+#   endif
+#else
+#   define CUSTOM_ATTRIBUTE_ALIGNED(n)
+#endif
 
-typedef struct {
-    const char* c_path;
-    const char* h_name;
-    bool create_header;
-    size_t num_inputs;
-    InputFileParams inputs[];
-} OutputFileParams;
-
-bool handleFile(const OutputFileParams* params)
-    ATTR_ACCESS(read_only, 1)
-    ATTR_NONNULL;
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-#endif // HANDLEFILE_H_INCLUDED
+#endif // CUSTOM_EXTRA_HEADER_H_INCLUDED

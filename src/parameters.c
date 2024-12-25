@@ -25,7 +25,8 @@
 OutputFileParams *params_ = NULL; // allocated to the below size at the start of main
 size_t current_params_size_ = sizeof(OutputFileParams) + sizeof(InputFileParams)*1;
 InputFileParams defaults_ = {
-    .path = NULL,
+    .path_original = NULL,
+    .path_to_open = NULL,
     .length_name = NULL,
     .array_name = NULL,
     .attributes = NULL,
@@ -35,7 +36,7 @@ InputFileParams defaults_ = {
     .make_const = true,
 };
 
-void newInputFile(const char* path) {
+void newInputFile(const char* path, bool from_params_file) {
     params_->num_inputs++;
     size_t new_needed_size = sizeof(OutputFileParams) + sizeof(InputFileParams)*(params_->num_inputs);
     if (new_needed_size > current_params_size_) {
@@ -49,10 +50,14 @@ void newInputFile(const char* path) {
     InputFileParams *input = &params_->inputs[params_->num_inputs-1];
     // initialize to defaults
     *input = defaults_;
-    input->path = duplicateString(path);
+    input->path_original = duplicateString(path);
+    if (defaults_.attributes!=NULL)
+        input->attributes = duplicateString(defaults_.attributes);
+    // TODO: remember this when writing memory deallocation code, if I ever do that
+    input->path_to_open = (from_params_file ? pathRelativeToFile(params_->params_file, path) : input->path_original);
 }
 
-bool parseParameterLine(const char* arg) {
+bool parseParameterLine(const char* arg, bool from_params_file) {
     const char* equals_pos = strchr(arg, '=');
     if (UNLIKELY(equals_pos==NULL))
         return false;
@@ -68,45 +73,59 @@ bool parseParameterLine(const char* arg) {
             myFatal("%s: global-only parameters must precede parameters specific to input files", parameter_name);
         } else if (UNLIKELY(!parameter->valid_global))
             myFatal("%s: parameter must follow a specific input file", parameter_name);
-        parameter->handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_);
+        parameter->handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_, from_params_file);
         return true;
     }
     return false;
 }
 
-void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file) {
     if (UNLIKELY(params_->c_path!=NULL))
-        myFatal("cannot give c_path more than once");
-    params_->c_path = duplicateString(str);
+        myFatal("cannot give %s more than once", "c_path");
+    // is there a point to asserting non-null? a segfault is already a strong assertion
+    //assert(params_->params_file!=NULL);
+    params_->c_path = (from_params_file ? pathRelativeToFile(params_->params_file, str) : duplicateString(str));
 }
 
-void registerHName(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerHName(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
     if (UNLIKELY(params_->h_name!=NULL))
-        myFatal("cannot give h_name more than once");
+        myFatal("cannot give %s more than once", "h_name");
     params_->h_name = duplicateString(str);
 }
 
-void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED) {
+void registerExtraHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->header_top_text = sprintfAppend(params_->header_top_text, "#include \"%s\"\n", str);
+}
+
+void registerExtraSystemHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->header_top_text = sprintfAppend(params_->header_top_text, "#include <%s>\n", str);
+}
+
+void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
     params_->create_header = parseBool(str, "create_header");
 }
 
-void registerLengthName(const char* str, InputFileParams* params) {
+void registerLengthName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
+    if (UNLIKELY(params->length_name!=NULL))
+        myFatal("cannot give %s for a target more than once", "length_name");
     params->length_name = duplicateString(str);
 }
 
-void registerArrayName(const char* str, InputFileParams* params) {
+void registerArrayName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
+    if (UNLIKELY(params->length_name!=NULL))
+        myFatal("cannot give %s for a target more than once", "array_name");
     params->array_name = duplicateString(str);
 }
 
-void registerAttributes(const char* str, InputFileParams* params) {
-    params->attributes = duplicateString(str);
+void registerAttributes(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
+    params->attributes = sprintfAppend(params->attributes, "%s\n", str);
 }
 
-void registerLineLength(const char* str, InputFileParams* params) {
+void registerLineLength(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     params->line_length = parseUint32(str, strlen(str));
 }
 
-void registerBase(const char* str, InputFileParams* params) {
+void registerBase(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     if (!strcmp(str, "16"))
         params->base = 16U;
     else if (!strcmp(str, "10"))
@@ -117,12 +136,16 @@ void registerBase(const char* str, InputFileParams* params) {
         myFatal("invalid base %s", str);
 }
 
-void registerAligned(const char* str, InputFileParams* params) {
+void registerAligned(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     params->aligned = parseBool(str, "aligned");
 }
 
-void registerMakeConst(const char* str, InputFileParams* params) {
+void registerMakeConst(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED) {
     params->make_const = parseBool(str, "const");
+}
+
+void registerConstexpr(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED) {
+    params_->constexpr_length = parseBool(str, "constexpr_length");
 }
 
 

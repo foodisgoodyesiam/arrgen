@@ -57,15 +57,7 @@ bool handleFile(const OutputFileParams* params) {
 static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
     DLOG("entering function");
     // this is a clunky way of handling it, but whatever
-    char h_path[strlen(params->c_path) + strlen(params->h_name)+2]; // +2 for / and null terminator, in the worst case...? worse than the worst case
-    strcpy(h_path, params->c_path);
-    char* spot_to_insert_header_name = strchr(h_path, '/');
-    if (spot_to_insert_header_name==NULL)
-        spot_to_insert_header_name = h_path;
-    else
-        spot_to_insert_header_name++;
-    strcpy(spot_to_insert_header_name, params->h_name);
-    DLOG("c_path: %s, h_name: %s, resulting h_path: %s", params->c_path, params->h_name, h_path);
+    const char *h_path = pathRelativeToFile(params->c_path, params->h_name);
     FILE *out = fopen(h_path, "wb");
     bool ret;
     if (UNLIKELY(out==NULL)) {
@@ -76,38 +68,37 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         const char *include_guard = createCName(h_path, strlen(h_path), "_INCLUDED");
         int res;
         res = fprintf(out,
+            "%s"
             "#ifndef %s\n"
             "#define %s\n"
+            "%s"
             "#ifdef __cplusplus\n"
             "extern \"C\" {\n"
             "#endif // __cplusplus\n"
             "\n",
+            (params->constexpr_length ? "#include <stddef.h>\n" : ""),
             include_guard,
-            include_guard);
+            include_guard,
+            (params->header_top_text==NULL ? "" : params->header_top_text));
         for (size_t i=0; i<params->num_inputs; i++) {
             fprintf(out,
-                "#define %s %" PRIu64 "U\n",
+                (params->constexpr_length ? "constexpr size_t %s = %" PRIu64 "U;\n" : "#define %s %" PRIu64 "U\n"),
                 params->inputs[i].length_name,
                 (uint64_t)lengths[i]);
         }
-        fprintf(out, "\n");
         for (size_t i=0; i<params->num_inputs; i++) {
             // TODO hmm, what do I do if the input file name contains a newline
             // TODO use the line pragma for attributes etc...? maybe unnecessary
             fprintf(out,
+                "\n"
                 "// %s\n"
-                "extern%s unsigned char %s[%s]",
-                params->inputs[i].path,
+                "%s"
+                "extern%s unsigned char %s[%s];\n",
+                params->inputs[i].path_original,
+                (params->inputs[i].attributes==NULL ? "" : params->inputs[i].attributes),
                 (LIKELY(params->inputs[i].make_const) ? " const" : ""),
                 params->inputs[i].array_name,
                 params->inputs[i].length_name);
-            if (params->inputs[i].attributes==NULL)
-                fprintf(out, ";\n");
-            else {
-                fprintf(out,
-                    " %s;\n",
-                    params->inputs[i].attributes);
-            }
         }
         fprintf(out,
             "\n"
@@ -124,6 +115,7 @@ static bool writeH(const OutputFileParams* params, const size_t lengths[]) {
         ret = true;
         free((void*)include_guard); // totally unnecessary but why not
     }
+    free((void*)h_path);
     DLOG("returning %hhu", ret);
     return (ret);
 }
@@ -142,14 +134,15 @@ static bool writeC(const OutputFileParams* params, size_t lengths[]) {
         for (size_t i=0; i<params->num_inputs; i++) {
             const InputFileParams *input = &params->inputs[i];
             fprintf(out,
-                "const unsigned char %s[%s] = {",
+                "%sunsigned char %s[%s] = {",
+                (input->make_const ? "const " : ""),
                 input->array_name,
                 input->length_name);
             ssize_t length = writeFileContents(out, input);
             ret = LIKELY(length>=0);
             if (!ret)
                 break;
-            lengths[i] = length;
+            lengths[i] = (size_t)length;
             fprintf(out, "};\n");
         }
         if (UNLIKELY(ferror(out))) {
@@ -168,67 +161,67 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     initializeLookup(input->base, input->aligned);
     // following a no-early-return policy here because of the various unwinding necessary
 #ifdef ARRGEN_MMAP_SUPPORTED
-    int fd = open(input->path, O_RDONLY);
+    int fd = open(input->path_to_open, O_RDONLY);
     if (UNLIKELY(fd<0)) {
-        myErrorErrno("%s: could not open", input->path);
+        myErrorErrno("%s: could not open", input->path_to_open);
         length = -1;
     } else {
         struct stat stats;
         if (UNLIKELY(fstat(fd, &stats)!=0)) {
-            myErrorErrno("%s: could not fstat fd %d", input->path, fd);
+            myErrorErrno("%s: could not fstat fd %d", input->path_to_open, fd);
             length = -1;
         } else {
             switch (stats.st_mode & S_IFMT) {
             case S_IFREG: {
                 length = stats.st_size;
                 // TODO: consider if it should fall back to streaming on mmap failure
-                const uint8_t* mem = (const uint8_t*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
+                const uint8_t* mem = (const uint8_t*) mmap(NULL, (size_t)length, PROT_READ, MAP_SHARED, fd, 0);
                 if (UNLIKELY(close(fd)!=0))
-                    myErrorErrno("%s: could not close fd %d", input->path, fd);
+                    myErrorErrno("%s: could not close fd %d", input->path_to_open, fd);
                 if (UNLIKELY(mem==MAP_FAILED)) {
-                    myErrorErrno("%s: mmap", input->path);
+                    myErrorErrno("%s: mmap", input->path_to_open);
                     length = -1;
                 } else {
                     if (length > arrgen_pagesize_) {
                         // why the frick does madvise not qualify the argument with const...
-                        if (UNLIKELY(madvise((void*)mem, length, MADV_SEQUENTIAL)))
-                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path, length, mem);
+                        if (UNLIKELY(madvise((void*)mem, (size_t)length, MADV_SEQUENTIAL)))
+                            myErrorErrno("%s: could not madvise for %zd bytes at %p", input->path_to_open, length, mem);
                     }
                     ssize_t cur_line_pos = -1;
-                    writeArrayContents(out, mem, length, &cur_line_pos, input->line_length);
-                    if (UNLIKELY(munmap((void*)mem, length))!=0)
-                        myErrorErrno("%s: munmap", input->path);
+                    writeArrayContents(out, mem, (size_t)length, &cur_line_pos, input->line_length);
+                    if (UNLIKELY(munmap((void*)mem, (size_t)length))!=0)
+                        myErrorErrno("%s: munmap", input->path_to_open);
                 }
                 }; break;
             case S_IFBLK:
-                myError("%s: what the heck are you doing?", input->path);
+                myError("%s: what the heck are you doing?", input->path_to_open);
                 length = -1;
                 break;
             default: {
                 FILE* in = fdopen(fd, "rb");
                 if (UNLIKELY(in==NULL)) {
-                    myErrorErrno("%s: could not fdopen %d", input->path, fd);
+                    myErrorErrno("%s: could not fdopen %d", input->path_to_open, fd);
                     length = -1;
                     if (UNLIKELY(close(fd)!=0))
-                        myErrorErrno("%s: could not close fd %d", input->path, fd);
+                        myErrorErrno("%s: could not close fd %d", input->path_to_open, fd);
                 } else {
-                    length = writeArrayStreamed(out, in, input->path, input->line_length);
+                    length = writeArrayStreamed(out, in, input->path_to_open, input->line_length);
                     if (UNLIKELY(fclose(in)!=0))
-                        myErrorErrno("%s: could not fclose", input->path);
+                        myErrorErrno("%s: could not fclose", input->path_to_open);
                 }
                 } break;
             }
         }
     }
 #else // MMAP_SUPPORTED
-    FILE* in = fopen(input->path, "rb");
+    FILE* in = fopen(input->path_to_open, "rb");
     if (UNLIKELY(in==NULL)) {
-        myErrorErrno("%s: could not fopen", input->path);
+        myErrorErrno("%s: could not fopen", input->path_to_open);
         length = -1;
     } else {
-        length = writeArrayStreamed(out, in, input->path, input->line_length);
+        length = writeArrayStreamed(out, in, input->path_to_open, input->line_length);
         if (UNLIKELY(fclose(in)!=0))
-            myErrorErrno("%s: could not fclose", input->path);
+            myErrorErrno("%s: could not fclose", input->path_to_open);
     }
 #endif // ARRGEN_MMAP_SUPPORTED
     DLOG("returning %zd", length);
@@ -251,7 +244,7 @@ static ssize_t writeArrayStreamed(FILE* out, FILE* in, const char* in_path, size
         DLOG("%s: num_read = %zu\ttotal_length=%zu", in_path, num_read, total_length);
         writeArrayContents(out, buf, num_read, &cur_line_pos, line_limit);
     }
-    return (error==0 ? total_length : -1);
+    return (error==0 ? (ssize_t)total_length : -1);
 }
 
 

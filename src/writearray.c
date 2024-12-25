@@ -85,7 +85,7 @@ void writeArrayContents(FILE* out, const uint8_t *buf, size_t length, ssize_t *c
         }
     } else {
         for (; i<length; i+=num_to_print) {
-            if (UNLIKELY(*cur_line_pos >= line_limit)) {
+            if (UNLIKELY((size_t)*cur_line_pos >= line_limit)) {
                 fprintf(out, "\n    ");
                 *cur_line_pos = 0;
             }

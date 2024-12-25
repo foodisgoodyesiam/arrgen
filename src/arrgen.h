@@ -19,6 +19,7 @@
 #ifndef ARRGEN_H_INCLUDED
 #define ARRGEN_H_INCLUDED
 // TODO: figure out a better feature test method. Maybe this is an opportunity to learn autotools? Could also use gnulib to get their implementation of getline.
+// also, I think getline is posix, but as far as I can tell there's no way to check for posix in the preprocessor...
 #if defined(__APPLE__) || defined(__linux__) || defined(__CYGWIN__)
 #   define ARRGEN_GETLINE_SUPPORTED
 #elif defined(__STDC_ALLOC_LIB__)
@@ -103,9 +104,13 @@
 #   define ATTR_NONSTRING
 #endif
 #if __has_attribute(malloc)
-#   define ATTR_MALLOC __attribute__ ((malloc))
+#   if defined(__GNUC__) && __GNUC__ >= 11
+#       define ATTR_MALLOC(a) __attribute__ ((malloc(a)))
+#   else
+#       define ATTR_MALLOC(a) __attribute__ ((malloc))
+#   endif
 #else
-#   define ATTR_MALLOC
+#   define ATTR_MALLOC(a)
 #endif
 #if __has_attribute(unused)
 #   define ATTR_UNUSED __attribute__ ((unused))
@@ -122,18 +127,38 @@
 #else
 #   define ATTR_CONST
 #endif
-#if __STDC_VERSION__ >= 202311L
+#if __has_attribute(pure)
+#   define ATTR_PURE __attribute__ ((pure))
+#else
+#   define ATTR_PURE
+#endif
+#if __STDC_VERSION__ >= 202000L
 #   define ATTR_NODISCARD [[nodiscard]]
 #elif __has_attribute(warn_unused_result)
 #   define ATTR_NODISCARD __attribute__ ((warn_unused_result))
 #else
 #   define ATTR_NODISCARD
 #endif
+#if __STDC_VERSION__ >= 202000L
+#   define ATTR_NORETURN [[noreturn]]
+#elif __STDC_VERSION__ >= 201112L
+#   include <stdnoreturn.h>
+#   define ATTR_NORETURN noreturn
+#elif __has_attribute(noreturn)
+#   define ATTR_NORETURN __attribute__ ((noreturn))
+#else
+#   define ATTR_NORETURN
+#endif
 #ifdef ARRGEN_H_TEMP_HAS_ATTRIBUTE
 #   undef __has_attribute // to not mess up headers included after this
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
+#ifdef __has_builtin
+#   if __has_builtin(__builtin_expect)
+#       define LIKELY(a) __builtin_expect((a), true)
+#       define UNLIKELY(a) __builtin_expect((a), false)
+#   endif
+#elif defined(__GNUC__) || defined(__clang__)
 #   define LIKELY(a) __builtin_expect((a), true)
 #   define UNLIKELY(a) __builtin_expect((a), false)
 #else

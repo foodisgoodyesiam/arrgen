@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "errors.h"
+#include <stdarg.h>
+#include <assert.h>
+#include <stdio.h>
 
 #if defined(__GNUC__) || defined(__clang__)
 #   define USE_FANCY_INT_PARSING
@@ -39,7 +42,7 @@ static uint8_t parseBase(char c)
 #define NAME_PREFIX "ARRGEN_"
 
 // hmm. is there an alternative to malloc for this?
-const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix) {
+char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix) {
     const size_t prefix_length = strlen(NAME_PREFIX);
     const size_t suffix_length = strlen(suffix);
     const size_t out_length = prefix_length+name_length+suffix_length+1; // +1 for null terminator
@@ -59,9 +62,28 @@ const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, con
     return ret;
 }
 
+char* pathRelativeToFile(const char* base_file_path, const char* relative_path) {
+    // this could be optimized in many ways, but it's so far from a bottleneck that it doens't matter
+    size_t ret_length = strlen(base_file_path) + strlen(relative_path);
+    char *ret = malloc(ret_length+1); // +2 for null terminator, in the worst case...? worse than the worst case
+    if (UNLIKELY(ret==NULL))
+        myFatal("could not allocate %zu bytes", ret_length+1);
+    strcpy(ret, base_file_path);
+    char* spot_to_insert_relative_path = strrchr(ret, '/');
+    if (spot_to_insert_relative_path==NULL)
+        spot_to_insert_relative_path = ret; // means there are no directory separators, so just copy relative_path into the return string
+    else
+        spot_to_insert_relative_path++; // means insert it after the last /
+    strcpy(spot_to_insert_relative_path, relative_path);
+    DLOG("base_file_path: %s, relative_path: %s, resulting concatenation: %s, allocated size: %zu, actual size: %zu", base_file_path, relative_path, ret, ret_length, strlen(ret));
+    return ret;
+}
+
+#if __STDC_VERSION__ < 202000L
 char* duplicateString(const char* str) {
     return duplicateStringLen(str, strlen(str));
 }
+#endif
 
 char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length) {
     char* ret = malloc(length+1);
@@ -81,6 +103,33 @@ const char* customBasename(const char* path) {
     return ret;
 }
 #endif // ARRGEN_USE_CUSTOM_BASENAME
+
+// hmm. this is pretty inefficient. TODO optimize this better, maybe provide existing buffer size
+char* sprintfAppend(char* restrict base, const char* restrict format, ...) {
+    va_list args, args_copy;
+    char *ret;
+    size_t size_to_allocate, previous_len;
+    int len_to_append, len_written;
+    va_start(args, format);
+    va_copy(args_copy, args);
+    // query the length
+    len_to_append = vsnprintf(NULL, 0, format, args);
+    if (UNLIKELY(len_to_append<0))
+        myFatalErrno("vsnprintf: %s", format);
+    va_end(args);
+    previous_len = (base==NULL ? 0U : strlen(base));
+    size_to_allocate = previous_len+len_to_append+1; // +1 for null terminator
+    ret = realloc(base, size_to_allocate);
+    if (UNLIKELY(ret==NULL))
+        myFatalErrno("sprintfAppend: %s: failed to allocate %zu bytes", format, size_to_allocate);
+    len_written = vsnprintf(&ret[previous_len], len_to_append+1, format, args_copy);
+    va_end(args_copy);
+    // this is probably pointless (even the first time above), but it should barely add any code size
+    if (UNLIKELY(len_written<0))
+        myFatalErrno("vsnprintf: %s", format);
+    assert(len_written==len_to_append);
+    return ret;
+}
 
 // TODO: consider if I should just rely on the strto function? hmm
 uint32_t parseUint32(const char* arg, size_t length) {

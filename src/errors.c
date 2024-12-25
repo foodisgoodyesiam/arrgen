@@ -34,7 +34,7 @@ void myError(const char* restrict message, ...) {
     va_end(args);
     if (LIKELY(len>=0)) {
         char buf[len+1];
-        vsnprintf(buf, len+1, message, args_copy);
+        vsnprintf(buf, (size_t)len+1, message, args_copy);
         fprintf(stderr, "%s: %s\n", program_name_, buf);
     }
     va_end(args_copy);
@@ -48,9 +48,8 @@ void myErrorErrno(const char* restrict message, ...) {
     int len = vsnprintf(NULL, 0, message, args);
     va_end(args);
     if (LIKELY(len>0)) {
-//        char buf[len+1];
-        char *buf = malloc(len+1);
-        vsnprintf(buf, len+1, message, args_copy);
+        char buf[len+1];
+        vsnprintf(buf, (size_t)len+1, message, args_copy);
         fprintf(stderr, "%s: %s: %s\n", program_name_, buf, strerror(error));
     }
     va_end(args_copy);
@@ -64,7 +63,7 @@ void myFatal(const char* restrict message, ...) {
     va_end(args);
     if (LIKELY(len>0)) {
         char buf[len+1];
-        vsnprintf(buf, len+1, message, args_copy);
+        vsnprintf(buf, (size_t)len+1, message, args_copy);
         fprintf(stderr, "%s: %s\n", program_name_, buf);
     }
     va_end(args_copy);
@@ -80,7 +79,7 @@ void myFatalErrno(const char* restrict message, ...) {
     va_end(args);
     if (LIKELY(len>=0)) {
         char buf[len+1];
-        vsnprintf(buf, len+1, message, args_copy);
+        vsnprintf(buf, (size_t)len+1, message, args_copy);
         fprintf(stderr, "%s: %s: %s\n", program_name_, buf, strerror(error));
     }
     va_end(args_copy);

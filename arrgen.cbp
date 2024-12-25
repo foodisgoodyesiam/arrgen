@@ -15,7 +15,8 @@
 					<Add option="-g" />
 				</Compiler>
 				<ExtraCommands>
-					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
+					<Add before="./createversionmessage.sh" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Release">
@@ -25,12 +26,14 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-DNDEBUG=1" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 				</Linker>
 				<ExtraCommands>
-					<Add before="gperf -m 100 parameter_lookup.gperf &gt;gen_parameter_lookup.c" />
+					<Add before="gperf -m 100 src/parameter_lookup.gperf &gt;gen_src/parameter_lookup.c" />
+					<Add before="./createversionmessage.sh" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Example">
@@ -44,6 +47,9 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="bin/Release/arrgen -f example/example.arrgen" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
@@ -52,34 +58,14 @@
 		<Unit filename="COPYING" />
 		<Unit filename="Makefile" />
 		<Unit filename="TODO" />
-		<Unit filename="arrgen.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="arrgen.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="c_string_stuff.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="c_string_stuff.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="errors.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="errors.h">
+		<Unit filename="createversionmessage.sh">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="example/Makefile">
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/custom_extra_header.h">
 			<Option target="Example" />
 		</Unit>
 		<Unit filename="example/example.arrgen">
@@ -89,43 +75,85 @@
 			<Option compilerVar="CC" />
 			<Option target="Example" />
 		</Unit>
-		<Unit filename="gen_parameter_lookup.c">
+		<Unit filename="example/gen_arrays.h">
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="example/gen_arrays_test.c">
+			<Option compilerVar="CC" />
+			<Option target="Example" />
+		</Unit>
+		<Unit filename="gen_src/build_version_message.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="gen_src/parameter_lookup.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="handlefile.c">
+		<Unit filename="src/arrgen.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="handlefile.h">
+		<Unit filename="src/arrgen.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="pagesize.cpp">
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="parameter_lookup.gperf">
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="parameters.c">
+		<Unit filename="src/c_string_stuff.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="parameters.h">
+		<Unit filename="src/c_string_stuff.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="writearray.c">
+		<Unit filename="src/errors.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>
-		<Unit filename="writearray.h">
+		<Unit filename="src/errors.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/handlefile.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/handlefile.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/pagesize.cpp">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/parameter_lookup.gperf">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/parameters.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/parameters.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/version_message.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/writearray.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="src/writearray.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 		</Unit>

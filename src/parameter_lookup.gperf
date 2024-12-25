@@ -1,7 +1,7 @@
-struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*); const bool valid_global; const bool valid_individual;};
+struct ArrgenParameter { int name_offset; void (*const handler)(const char*, InputFileParams*, bool); const bool valid_global; const bool valid_individual;};
 %{
-#include "arrgen.h"
-#include "parameters.h"
+#include "../src/arrgen.h"
+#include "../src/parameters.h"
 %}
 %struct-type
 %language=ANSI-C
@@ -14,6 +14,8 @@ struct ArrgenParameter { int name_offset; void (*const handler)(const char*, Inp
 %%
 "c_path", registerCPath, true, false
 "h_name", registerHName, true, false
+"extra_header", registerExtraHeader, true, false
+"extra_system_header", registerExtraSystemHeader, true, false
 "create_header", registerCreateHeader, true, false
 "array_name", registerArrayName, false, true
 "length_name", registerLengthName, false, true
@@ -22,3 +24,4 @@ struct ArrgenParameter { int name_offset; void (*const handler)(const char*, Inp
 "base", registerBase, true, true
 "aligned", registerAligned, true, true
 "const", registerMakeConst, true, true
+"constexpr_length", registerConstexpr, true, false

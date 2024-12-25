@@ -20,16 +20,21 @@
 %c_path=gen_arrays_test.c
 %create_header=true
 %line_length=20
+%extra_header=custom_extra_header.h
+
+#empty lines are skipped
+
 @small_image.png
-@../arrgen.c
-%attributes=__attribute__((aligned(32)))
+
+@../src/arrgen.c
+%attributes=CUSTOM_ATTRIBUTE_ALIGNED(32)
 %array_name=MY_ARRAY_NAME
 %length_name=MY_ARRAY_NAME_LENGTH_GWAHAHA
 %base=16
 %aligned=yes
 
-@../arrgen.c
-%attributes=
+@../src/arrgen.c
 %base=10
 %aligned=false
+%const=no
 %line_length=0

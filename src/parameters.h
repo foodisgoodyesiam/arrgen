@@ -20,15 +20,10 @@
 #define PARAMETERS_H_INCLUDED
 #include "arrgen.h"
 #include "handlefile.h"
-#define USE_GPERF
 
 typedef struct ArrgenParameter {
-#ifdef USE_GPERF
     int name_offset;
-#else
-    const char *parameter_name;
-#endif
-    void (*const handler)(const char*, InputFileParams*);
+    void (*const handler)(const char*, InputFileParams*, bool);
     const bool valid_global;
     const bool valid_individual;
 } ArrgenParameter;
@@ -41,6 +36,7 @@ extern "C" {
 // TODO: is this usage of read_only actually right, for strings where the null terminator is one past the length indicated by len?>
 const struct ArrgenParameter* identifyParameter(register const char *str, register size_t len)
     ATTR_ACCESS(read_only, 1, 2)
+    ATTR_PURE
     ATTR_NONNULL;
 
 // TODO find a cleaner solution that doesn't give current_params_size_ external linkage.
@@ -49,30 +45,37 @@ extern OutputFileParams *params_;
 extern size_t current_params_size_; // current size of the allocated buffer for params
 extern InputFileParams defaults_;
 
-void newInputFile(const char* path)
+// increment the number of inputs, and initialize the parameters of the newly added input file
+void newInputFile(const char* path, bool from_params_file)
     ATTR_NONNULL;
-bool parseParameterLine(const char* arg)
+bool parseParameterLine(const char* arg, bool from_params_file)
     ATTR_NONNULL;
 
-void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerCPath(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file)
     ATTR_NONNULL;
-void registerHName(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerHName(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED)
+void registerExtraHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerLengthName(const char* str, InputFileParams* params)
+void registerExtraSystemHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerArrayName(const char* str, InputFileParams* params)
+void registerCreateHeader(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerAttributes(const char* str, InputFileParams* params)
+void registerLengthName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerLineLength(const char* str, InputFileParams* params)
+void registerArrayName(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerBase(const char* str, InputFileParams* params)
+void registerAttributes(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerAligned(const char* str, InputFileParams* params)
+void registerLineLength(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
-void registerMakeConst(const char* str, InputFileParams* params)
+void registerBase(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
+void registerAligned(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
+void registerMakeConst(const char* str, InputFileParams* params, bool from_params_file ATTR_UNUSED)
+    ATTR_NONNULL;
+void registerConstexpr(const char* str, InputFileParams* params ATTR_UNUSED, bool from_params_file ATTR_UNUSED)
     ATTR_NONNULL;
 
 #ifdef __cplusplus

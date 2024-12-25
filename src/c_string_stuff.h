@@ -19,42 +19,75 @@
 #ifndef C_STRING_STUFF_H_INCLUDED
 #define C_STRING_STUFF_H_INCLUDED
 #include "arrgen.h"
+#include <stdlib.h>
 
-const char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
+ATTR_NODISCARD
+char* createCName(const char* name ATTR_NONSTRING, size_t name_length, const char* suffix)
     ATTR_ACCESS(read_only, 1, 2)
     ATTR_ACCESS(read_only, 3)
-    ATTR_MALLOC
+    ATTR_MALLOC(free)
     ATTR_RETURNS_NONNULL
-    ATTR_NODISCARD
+    ATTR_NONNULL;
+
+ATTR_NODISCARD
+char* pathRelativeToFile(const char* base_file_path, const char* relative_path)
+    ATTR_ACCESS(read_only, 1)
+    ATTR_ACCESS(read_only, 2)
+    ATTR_MALLOC(free)
+    ATTR_RETURNS_NONNULL
     ATTR_NONNULL;
 
 // TODO: figure out if there's a convenient way to not need this
+#if __STDC_VERSION__ >= 202000L
+#   define duplicateString(a) strdup(a)
+#else
+ATTR_NODISCARD
 char* duplicateString(const char* str)
     ATTR_ACCESS(read_only, 1)
-    ATTR_MALLOC
+    ATTR_MALLOC(free)
     ATTR_RETURNS_NONNULL
-    ATTR_NODISCARD
     ATTR_NONNULL;
+#endif
 
+ATTR_NODISCARD
 char* duplicateStringLen(const char* str ATTR_NONSTRING, size_t length)
     ATTR_ACCESS(read_only, 1, 2)
-    ATTR_MALLOC
+    ATTR_MALLOC(free)
     ATTR_RETURNS_NONNULL
     ATTR_NONNULL;
+
+/**
+ * @brief reallocates memory to print provided formatted string at the end of provided string.
+ * If provided string is null, allocates memory for it.
+ * @param base original string
+ * @param message printf-formatted string
+ * @return pointer to the newly allocated string
+*/
+ATTR_NODISCARD
+char* sprintfAppend(char* restrict base, const char* restrict format, ...)
+    ATTR_ACCESS(read_only, 2)
+    ATTR_ACCESS(read_write, 1)
+    ATTR_FORMAT(printf, 2, 3)
+    ATTR_MALLOC(free)
+    ATTR_RETURNS_NONNULL
+    ATTR_NONNULL_N(2);
 
 uint32_t parseUint32(const char* arg, size_t length)
     ATTR_ACCESS(read_only, 1, 2)
+    ATTR_PURE
     ATTR_NONNULL;
 
 bool parseBool(const char *potential_bool, const char *param_name)
     ATTR_ACCESS(read_only, 1)
     ATTR_ACCESS(read_only, 2)
+    ATTR_PURE
     ATTR_NONNULL;
 
 // hmm. clean this up to be more portable (why did I write it this way? glibc should be the special case not the assumed default)
 #if !defined(__GLIBC__) && !defined(__CYGWIN__)
 const char* customBasename(const char* path)
     ATTR_ACCESS(read_only, 1)
+    ATTR_PURE
     ATTR_NONNULL;
 #   define ARRGEN_USE_CUSTOM_BASENAME
 #   define ARRGEN_BASENAME(a) customBasename(a)
