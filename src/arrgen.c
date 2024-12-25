@@ -73,7 +73,7 @@ static const char* VERSIONTEXT =
 static void parseParamsFile(const char* path)
     ATTR_NONNULL;
 
-static void freeIfNull(const void *ptr);
+static void freeIfNonNull(const void *ptr);
 
 const char* program_name_;
 
@@ -174,23 +174,23 @@ int main(int arg_num, const char** args) {
     for (size_t i=0U; i<params_->num_inputs; i++) {
         InputFileParams *cur = &params_->inputs[i];
         DLOG("path_original %zu", i);
-        freeIfNull(cur->path_original);
+        freeIfNonNull(cur->path_original);
         DLOG("path_to_open %zu", i);
         if (cur->path_to_open!=cur->path_original)
-            freeIfNull(cur->path_to_open);
+            freeIfNonNull(cur->path_to_open);
         DLOG("length_name %zu", i);
-        freeIfNull(cur->length_name);
+        freeIfNonNull(cur->length_name);
         DLOG("array_name %zu", i);
-        freeIfNull(cur->array_name);
+        freeIfNonNull(cur->array_name);
         DLOG("attributes %zu", i);
-        freeIfNull(cur->attributes);
+        freeIfNonNull(cur->attributes);
     }
     DLOG("c_path");
     free((void*)params_->c_path);
     DLOG("h_name");
     free((void*)params_->h_name);
     DLOG("header_top_text");
-    freeIfNull(params_->header_top_text);
+    freeIfNonNull(params_->header_top_text);
     DLOG("params_");
     free(params_);
 #endif // NDEBUG
@@ -250,7 +250,7 @@ static void parseParamsFile(const char* path) {
     free(buf);
 }
 
-static void freeIfNull(const void *ptr) {
+static void freeIfNonNull(const void *ptr) {
     if (ptr!=NULL)
         free((void*)ptr);
 }
