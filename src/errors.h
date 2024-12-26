@@ -75,6 +75,18 @@ void myFatal(const char *restrict message, ...)
 #if defined(_WIN32) || defined(_WIN64)
 #   define ARRGEN_HAS_WINDOWS_ERROR_FUNCTIONS
 /**
+ * @brief prints formatted error message and string describing meaning of last Windows API error (program_name: message: error meaning) to standard error
+ * @param message printf-formatted message string
+*/
+ATTR_NORETURN
+void myErrorWindowsError(const char *restrict message, ...)
+    ATTR_COLD
+    ATTR_NONNULL_N(1)
+    ATTR_NOTHROW
+    ATTR_LEAF
+    ATTR_FORMAT(printf, 1, 2);
+
+/**
  * @brief prints formatted error message and string describing meaning of last Windows API error (program_name: message: error meaning) to standard error, then quits
  * @param message printf-formatted message string
 */
