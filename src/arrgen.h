@@ -1,4 +1,4 @@
-/* Copyright © 2024 Steven Marion <steven@dragons.fish>
+/* Copyright ï¿½ 2024 Steven Marion <steven@dragons.fish>
  *
  * This file is part of arrgen.
  *
@@ -37,6 +37,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// TODO according to this, you can get around the PATH_MAX on Windows? https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
 #if defined(__CYGWIN__) || defined(_WIN64) || defined(_WIN32)
 #   define PATH_MAX 1000 //should be 260 but whatever
 #elif defined(__APPLE__)
@@ -48,12 +49,34 @@
 #   define PATH_MAX 4096
 #endif
 
-#ifdef __has_include
-#   if __has_include(<sys/mman.h>)
-#       define ARRGEN_MMAP_SUPPORTED
+// TODO: investigate whether windows method is available in cygwin, and whether it's faster
+#define ARRGEN_MMAP_TYPE_NONE 0
+#define ARRGEN_MMAP_TYPE_POSIX 1
+#define ARRGEN_MMAP_TYPE_WINDOWS 2
+#ifndef ARRGEN_MMAP_SUPPORTED
+#   if defined(_WIN32) || defined(_WIN64)
+#       define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_WINDOWS
+#   elif defined(__linux__) || defined(__APPLE__)
+#       define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_POSIX
+#   elif defined(__has_include)
+#       if __has_include(<sys/mman.h>)
+#           define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_POSIX
+#       elif __has_include(<fileapi.h>)
+#           define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_WINDOWS
+#       else
+#           define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_NONE
+#       endif
+#   else
+#       define ARRGEN_MMAP_SUPPORTED ARRGEN_MMAP_TYPE_NONE
 #   endif
-#elif defined(__linux__) || defined(__APPLE__)
-#   define ARRGEN_MMAP_SUPPORTED
+#endif
+
+#if (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_POSIX)
+#   define ARRGEN_MMAP_VERSION_MESSAGE "Built with support for POSIX mmap\n"
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_WINDOWS)
+#   define ARRGEN_MMAP_VERSION_MESSAGE "Built with support for Windows memory-mapped IO\n"
+#else
+#   define ARRGEN_MMAP_VERSION_MESSAGE "Built without mmap support\n"
 #endif
 
 #ifndef __has_attribute

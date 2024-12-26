@@ -21,11 +21,18 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
-#ifdef ARRGEN_MMAP_SUPPORTED
+#ifndef ARRGEN_MMAP_SUPPORTED
+#   pragma error "ARRGEN_MMAP_SUPPORTED not defined, something's wrong with arrgen.h"
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_POSIX)
 #   include <sys/mman.h>
 #   include <sys/stat.h>
 #   include <unistd.h>
 #   include <fcntl.h>
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_WINDOWS)
+#   include <windows.h>
+#   include <fileapi.h>
+#elif (ARRGEN_MMAP_SUPPORTED != ARRGEN_MMAP_TYPE_NONE)
+#   pragma error "ARRGEN_MMAP_SUPPORTED has unknown value, something's wrong with arrgen.h"
 #endif
 #include "handlefile.h"
 #include "errors.h"
@@ -160,7 +167,7 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     ssize_t length;
     initializeLookup(input->base, input->aligned);
     // following a no-early-return policy here because of the various unwinding necessary
-#ifdef ARRGEN_MMAP_SUPPORTED
+#if (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_POSIX)
     int fd = open(input->path_to_open, O_RDONLY);
     if (UNLIKELY(fd<0)) {
         myErrorErrno("%s: could not open", input->path_to_open);
@@ -213,7 +220,28 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
             }
         }
     }
-#else // MMAP_SUPPORTED
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_WINDOWS)
+    // TODO step one: open with CreateFile
+    // TODO switch to the W version (ANSI = 8-bit characters, W=UTF-16)
+    // the 260-character limit can be avoided using \\?\ but that turns off expansion of . and .., figure out way around that...
+    HANDLE handle = CreateFileA(
+        input->path_to_open,
+        GENERIC_READ, // I only want to read the file
+        FILE_SHARE_READ, // don't let other people do anything to the file while I have it open, except reading it
+        NULL, // doesn't matter because I won't be creating any child processes
+        OPEN_EXISTING, // don't create it if it doesn't exist
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, // don't open it unbuffered, don't change it to hidden, and a bunch of other weird misc stuff. But hint to Windows that I'll read the file sequentially, sorta like madvise. (Can't figure out if it matters for memory-mapped I/O.)
+        NULL // parameters to give the newly created file, doesn't matter because I'm not creating a file
+        );
+    if (LIKELY(handle!=INVALID_HANDLE_VALUE)) {
+        myFatal("Success! woohoo");
+        // TODO step two: create a file mapping
+        // TODO step three: create a file view
+        // TODO decide whether to map with exclusive access or not. I think I don't care because writes/deletes should be prevented by the FILE_SHARE_READ.
+        // TODO figure out the close out steps. closing the HANDLE is the last step
+    } else
+        myFatalWindowsError("%s: CreateFileA", input->path_to_open);
+#else // ARRGEN_MMAP_TYPE_NONE
     FILE* in = fopen(input->path_to_open, "rb");
     if (UNLIKELY(in==NULL)) {
         myErrorErrno("%s: could not fopen", input->path_to_open);

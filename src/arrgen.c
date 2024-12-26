@@ -67,6 +67,7 @@ static const char HELPTEXT[] =
 // TODO: include other build settings and preprocessor defines? feature test results?
 static const char* VERSIONTEXT =
     "arrgen version " VERSION ". Copyright © 2024 Steven Marion\n"
+    ARRGEN_MMAP_VERSION_MESSAGE
     ARRGEN_VERSION_MESSAGE
     ;
 
