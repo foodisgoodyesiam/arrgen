@@ -227,7 +227,7 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     // TODO switch to the W version (ANSI = 8-bit characters, W=UTF-16)
     // the 260-character limit can be avoided using \\?\ but that turns off expansion of . and .., figure out way around that...
     // TODO investigate whether OpenFileMappingA can be used instead of the double-handle, would it simplify? would it have the same effect/level of control?
-    // TODO fall back on regular file I/O if the map fails? investigate when/whether this can happen in Windows, are there an equivalent of named pipes?
+    // TODO query file type with GetFileType, to determine if memory map is supported. also fall back on regular I/O if there's a failure (is there a HANDLE equivalent of fdopen? probably not a portable one)
     // TODO try this with not-locally-downloaded dropbox files or the like
     HANDLE handle = CreateFileA(
         input->path_to_open,
@@ -249,24 +249,22 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
             NULL // why would I want to name this handle?
         );
         if (LIKELY(mapping_handle!=INVALID_HANDLE_VALUE)) {
+            LARGE_INTEGER large;
+            if (UNLIKELY(!GetFileSizeEx(handle, &large)))
+                myFatalWindowsError("%s: GetFileSizeEx", input->path_to_open);
+            length = large.QuadPart; // I guess in Windows, "double word" still means 32 bits
             const uint8_t *mem = (const uint8_t*)MapViewOfFile(
                 mapping_handle,
                 FILE_MAP_READ,
                 0, // start at the beginning of the file
                 0, // start at the beginning of the file (don't get the difference between these two)
-                0  // map the entire file
+                length  // map the entire file
             );
             if (LIKELY(mem!=NULL)) {
-                // TODO: investigate, can I find the size of the file from the handle? instead of from the view? (should I?)
-                MEMORY_BASIC_INFORMATION info;
-                size_t info_buffer_bytes_written = VirtualQuery(mem, &info, sizeof(MEMORY_BASIC_INFORMATION));
-                if (UNLIKELY(info_buffer_bytes_written==0))
-                    myFatalWindowsError("%s: VirtualQuery", input->path_to_open);
-                length = info.RegionSize;
                 ssize_t cur_line_pos = -1;
                 writeArrayContents(out, mem, (size_t)length, &cur_line_pos, input->line_length);
             } else
-                myFatalWindowsError("%s: MapViewOfFile", input->path_to_open);
+                myFatalWindowsError("%s: MapViewOfFile failed for file size %zu bytes", input->path_to_open, length);
             if (UNLIKELY(!UnmapViewOfFile(mem)))
                 myErrorWindowsError("%s: UnmapViewOfFile", input->path_to_open);
         } else

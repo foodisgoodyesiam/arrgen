@@ -78,7 +78,6 @@ void myFatal(const char *restrict message, ...)
  * @brief prints formatted error message and string describing meaning of last Windows API error (program_name: message: error meaning) to standard error
  * @param message printf-formatted message string
 */
-ATTR_NORETURN
 void myErrorWindowsError(const char *restrict message, ...)
     ATTR_COLD
     ATTR_NONNULL_N(1)
