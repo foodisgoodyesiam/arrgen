@@ -67,11 +67,14 @@ static const char HELPTEXT[] =
 // TODO: include other build settings and preprocessor defines? feature test results?
 static const char* VERSIONTEXT =
     "arrgen version " VERSION ". Copyright © 2024 Steven Marion\n"
+    ARRGEN_MMAP_VERSION_MESSAGE
     ARRGEN_VERSION_MESSAGE
     ;
 
 static void parseParamsFile(const char* path)
     ATTR_NONNULL;
+
+static void freeIfNonNull(const void *ptr);
 
 const char* program_name_;
 
@@ -151,9 +154,9 @@ int main(int arg_num, const char** args) {
     // hmm. if I bother to free any of this memory, will need to probably duplicate this string instead of just assigning the pointer
     // maybe I should move this default-setting to a dedicated function? hmm
     if (params_->c_path == NULL)
-        params_->c_path = DEFAULT_C_PATH;
+        params_->c_path = duplicateString(DEFAULT_C_PATH);
     if (params_->h_name == NULL)
-        params_->h_name = DEFAULT_H_NAME;
+        params_->h_name = duplicateString(DEFAULT_H_NAME);
 
     for (size_t i=0; i<params_->num_inputs; i++) {
         InputFileParams *input = &params_->inputs[i];
@@ -166,7 +169,33 @@ int main(int arg_num, const char** args) {
     }
 
     bool status = handleFile(params_);
+
+#ifndef NDEBUG
+    DLOG("deallocating");
+    for (size_t i=0U; i<params_->num_inputs; i++) {
+        InputFileParams *cur = &params_->inputs[i];
+        DLOG("path_original %zu", i);
+        freeIfNonNull(cur->path_original);
+        DLOG("path_to_open %zu", i);
+        if (cur->path_to_open!=cur->path_original)
+            freeIfNonNull(cur->path_to_open);
+        DLOG("length_name %zu", i);
+        freeIfNonNull(cur->length_name);
+        DLOG("array_name %zu", i);
+        freeIfNonNull(cur->array_name);
+        DLOG("attributes %zu", i);
+        freeIfNonNull(cur->attributes);
+    }
+    DLOG("c_path");
+    free((void*)params_->c_path);
+    DLOG("h_name");
+    free((void*)params_->h_name);
+    DLOG("header_top_text");
+    freeIfNonNull(params_->header_top_text);
+    DLOG("params_");
     free(params_);
+#endif // NDEBUG
+    // Do not deallocate params_file, it wasn't allocated
     exit(status ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
@@ -222,3 +251,7 @@ static void parseParamsFile(const char* path) {
     free(buf);
 }
 
+static void freeIfNonNull(const void *ptr) {
+    if (ptr!=NULL)
+        free((void*)ptr);
+}

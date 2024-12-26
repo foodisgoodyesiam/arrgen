@@ -53,7 +53,6 @@ void newInputFile(const char* path, bool from_params_file) {
     input->path_original = duplicateString(path);
     if (defaults_.attributes!=NULL)
         input->attributes = duplicateString(defaults_.attributes);
-    // TODO: remember this when writing memory deallocation code, if I ever do that
     input->path_to_open = (from_params_file ? pathRelativeToFile(params_->params_file, path) : input->path_original);
 }
 

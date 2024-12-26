@@ -21,11 +21,20 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
-#ifdef ARRGEN_MMAP_SUPPORTED
+#ifndef ARRGEN_MMAP_SUPPORTED
+#   pragma error "ARRGEN_MMAP_SUPPORTED not defined, something's wrong with arrgen.h"
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_POSIX)
 #   include <sys/mman.h>
 #   include <sys/stat.h>
 #   include <unistd.h>
 #   include <fcntl.h>
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_WINDOWS)
+#   include <windows.h>
+#   include <fileapi.h>
+#   include <winbase.h>
+#   include <memoryapi.h>
+#elif (ARRGEN_MMAP_SUPPORTED != ARRGEN_MMAP_TYPE_NONE)
+#   pragma error "ARRGEN_MMAP_SUPPORTED has unknown value, something's wrong with arrgen.h"
 #endif
 #include "handlefile.h"
 #include "errors.h"
@@ -160,7 +169,7 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
     ssize_t length;
     initializeLookup(input->base, input->aligned);
     // following a no-early-return policy here because of the various unwinding necessary
-#ifdef ARRGEN_MMAP_SUPPORTED
+#if (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_POSIX)
     int fd = open(input->path_to_open, O_RDONLY);
     if (UNLIKELY(fd<0)) {
         myErrorErrno("%s: could not open", input->path_to_open);
@@ -213,7 +222,60 @@ static ssize_t writeFileContents(FILE* out, const InputFileParams *input) {
             }
         }
     }
-#else // MMAP_SUPPORTED
+#elif (ARRGEN_MMAP_SUPPORTED == ARRGEN_MMAP_TYPE_WINDOWS)
+    // this is a lot of overhead...
+    // TODO switch to the W version (ANSI = 8-bit characters, W=UTF-16)
+    // the 260-character limit can be avoided using \\?\ but that turns off expansion of . and .., figure out way around that...
+    // TODO investigate whether OpenFileMappingA can be used instead of the double-handle, would it simplify? would it have the same effect/level of control?
+    // TODO query file type with GetFileType, to determine if memory map is supported. also fall back on regular I/O if there's a failure (is there a HANDLE equivalent of fdopen? probably not a portable one)
+    // TODO try this with not-locally-downloaded dropbox files or the like
+    HANDLE handle = CreateFileA(
+        input->path_to_open,
+        GENERIC_READ, // I only want to read the file
+        FILE_SHARE_READ, // don't let other people do anything to the file while I have it open, except reading it
+        NULL, // doesn't matter because I won't be creating any child processes
+        OPEN_EXISTING, // don't create it if it doesn't exist
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, // don't open it unbuffered, don't change it to hidden, and a bunch of other weird misc stuff. But hint to Windows that I'll read the file sequentially, sorta like madvise. (Can't figure out if it matters for memory-mapped I/O.)
+        NULL // parameters to give the newly created file, doesn't matter because I'm not creating a file
+        );
+    if (LIKELY(handle!=INVALID_HANDLE_VALUE)) {
+        // TODO decide whether to map with exclusive access or not. I think I don't care because writes/deletes should be prevented by the FILE_SHARE_READ.
+        HANDLE mapping_handle = CreateFileMappingA(
+            handle,
+            NULL, // doesn't matter because I won't be creating any child processes
+            PAGE_READONLY,
+            0, // figure out the file size from the handle I gave you
+            0, // figure out the file size from the handle I gave you
+            NULL // why would I want to name this handle?
+        );
+        if (LIKELY(mapping_handle!=INVALID_HANDLE_VALUE)) {
+            LARGE_INTEGER large;
+            if (UNLIKELY(!GetFileSizeEx(handle, &large)))
+                myFatalWindowsError("%s: GetFileSizeEx", input->path_to_open);
+            length = large.QuadPart; // I guess in Windows, "double word" still means 32 bits
+            const uint8_t *mem = (const uint8_t*)MapViewOfFile(
+                mapping_handle,
+                FILE_MAP_READ,
+                0, // start at the beginning of the file
+                0, // start at the beginning of the file (don't get the difference between these two)
+                length  // map the entire file
+            );
+            if (LIKELY(mem!=NULL)) {
+                ssize_t cur_line_pos = -1;
+                writeArrayContents(out, mem, (size_t)length, &cur_line_pos, input->line_length);
+            } else
+                myFatalWindowsError("%s: MapViewOfFile failed for file size %zu bytes", input->path_to_open, length);
+            if (UNLIKELY(!UnmapViewOfFile(mem)))
+                myErrorWindowsError("%s: UnmapViewOfFile", input->path_to_open);
+        } else
+            myFatalWindowsError("%s: CreateFileMappingA", input->path_to_open);
+        if (UNLIKELY(!CloseHandle(mapping_handle)))
+            myErrorWindowsError("%s: CloseHandle (memory-mapping handle)", input->path_to_open);
+        if (UNLIKELY(!CloseHandle(handle)))
+            myErrorWindowsError("%s: CloseHandle", input->path_to_open);
+    } else
+        myFatalWindowsError("%s: CreateFileA", input->path_to_open);
+#else // ARRGEN_MMAP_TYPE_NONE
     FILE* in = fopen(input->path_to_open, "rb");
     if (UNLIKELY(in==NULL)) {
         myErrorErrno("%s: could not fopen", input->path_to_open);

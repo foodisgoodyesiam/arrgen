@@ -1,3 +1,4 @@
+-make the basename checking etc work in windows (handling of path separators, I think everything except relative path checking will work as-is in Windows)
 -write tests
 -add compile flag information to --version text
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
@@ -11,3 +12,4 @@
 -confirm windows build in msvc, mingw, cygwin, msys
 -test whether it works with unicode filenames on Windows
 -add gperf-style support for adding text at the top and bottom of the .c file
+-as the cleanup step, make things insert #error or something into the current file within myFatal?
