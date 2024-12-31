@@ -1,5 +1,6 @@
 -make the basename checking etc work in windows (handling of path separators, I think everything except relative path checking will work as-is in Windows)
 -write tests
+-add option for exporting .d file, similar to -MMD?
 -add compile flag information to --version text
 -make it write to named temporary files? is that how it should work? or somehow clean up if it fails partway through
 -write help text
