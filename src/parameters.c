@@ -62,16 +62,13 @@ bool parseParameterLine(const char* arg, bool from_params_file) {
         return false;
     size_t parameter_name_length = equals_pos-arg;
     bool defaults_end_reached = params_->num_inputs > 0;
-    char parameter_name[parameter_name_length+1];
-    memcpy(parameter_name, arg, parameter_name_length);
-    parameter_name[parameter_name_length] = '\0';
-    const ArrgenParameter *parameter = identifyParameter(parameter_name, parameter_name_length);
+    const ArrgenParameter *parameter = identifyParameter(arg, parameter_name_length);
     if (LIKELY(parameter!=NULL)) {
         if (defaults_end_reached) {
             if (UNLIKELY(!parameter->valid_individual))
-            myFatal("%s: global-only parameters must precede parameters specific to input files", parameter_name);
+            myFatal("%s: global-only parameters must precede parameters specific to input files", arg);
         } else if (UNLIKELY(!parameter->valid_global))
-            myFatal("%s: parameter must follow a specific input file", parameter_name);
+            myFatal("%s: parameter must follow a specific input file", arg);
         parameter->handler(equals_pos+1, defaults_end_reached ? &params_->inputs[params_->num_inputs-1] : &defaults_, from_params_file);
         return true;
     }
